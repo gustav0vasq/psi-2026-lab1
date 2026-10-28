@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psi-lab"
+version = "0.1.0"
+description = "Laboratorios de Procesamiento de Senales e Imagenes (13318), USACH"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26", "matplotlib>=3.8"]
+
+[project.optional-dependencies]
+caso = ["scipy>=1.11", "soundfile>=0.12"]
+dev = ["pytest>=8", "ruff>=0.5", "scipy>=1.11"]
+
+[project.scripts]
+psi-lab1 = "psi_lab.lab1.reproducir:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib"
+
+[tool.ruff]
+line-length = 100
