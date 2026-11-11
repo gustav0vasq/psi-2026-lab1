@@ -32,6 +32,14 @@ El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
 | `psi_lab.lab1.figuras` | `figura(nombre, requiere_datos=False)` | nombre: str único; requiere_datos: bool | decorador que registra `fun(salida)`; `ValueError` si el nombre ya existe |
 | `psi_lab.lab1.figuras` | `guardar_tabla(salida, nombre, encabezado, filas)` | salida: carpeta (Path); nombre: str; encabezado: lista de str; filas: lista de listas | ruta `salida/tablas/<nombre>.csv` (Path) |
 | `psi_lab.lab1.figuras` | `generar(salida, sintetico=False)` | salida: carpeta (Path); sintetico: bool | lista de nombres de las figuras generadas; con `sintetico=True` omite las que requieren datos |
+| `psi_lab.lab1.filtros` | `fir_pasabajos(fc, fs, n_coef, ventana="hamming")` | fc [Hz] en (0, fs/2); fs [Hz]; n_coef: entero; ventana: `"rect"`, `"hann"`, `"hamming"` o `"blackman"` | `h` 1D de largo `n_coef`, simétrico (fase lineal), `sum(h) = 1` |
+| `psi_lab.lab1.filtros` | `fir_pasaaltos(fc, fs, n_coef, ventana="hamming")` | igual que el pasabajos; `n_coef` **impar** | `h = delta - h_pasabajos`; ganancia 0 en DC |
+| `psi_lab.lab1.filtros` | `fir_pasabanda(f1, f2, fs, n_coef, ventana="hamming")` | f1 < f2 [Hz] en (0, fs/2) | `h = h_lp(f2) - h_lp(f1)`; ganancia 0 en DC |
+| `psi_lab.lab1.filtros` | `fir_rechazabanda(f1, f2, fs, n_coef, ventana="hamming")` | f1 < f2 [Hz]; `n_coef` **impar** | `h = delta - h_pasabanda`; ganancia 1 en DC |
+| `psi_lab.lab1.filtros` | `respuesta_frecuencia(h, fs, n=4096)` | h: 1D; fs [Hz]; n: número de frecuencias | `(freqs, H)`: freqs [Hz] = `i fs / (2n)`, i = 0..n-1 (en [0, fs/2)); `H` complejo de largo n |
+| `psi_lab.lab1.filtros` | `filtrar(x, h)` | x: 1D; h: 1D | `y` 1D del largo de x, sin retardo (compensa `(n_coef - 1) // 2` muestras) |
+| `psi_lab.lab1.filtros` | `crear_ventana(nombre, n_coef)` | nombre: `"rect"`, `"hann"`, `"hamming"`, `"blackman"` | ventana simétrica 1D de largo n_coef |
+| `psi_lab.lab1.filtros` | `medir_pasabajos(h, fs, fc, n=32768)` | h: pasabajos; fs, fc [Hz] | `(ancho_transicion [Hz], atenuacion [dB])`, medidos entre `1 - delta` y `delta` |
 | ... | ... | ... | ... |
 
 ## Figuras y tablas del informe
