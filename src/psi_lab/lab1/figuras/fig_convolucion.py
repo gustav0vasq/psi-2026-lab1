@@ -1,9 +1,11 @@
 """Convolucion lineal vs circular """
 
+import time
+
 import numpy as np
 from matplotlib.figure import Figure
 
-from psi_lab.lab1.convolucion import convolucion_fft
+from psi_lab.lab1.convolucion import convolucion_directa, convolucion_fft
 from psi_lab.lab1.dft import dft, idft
 from psi_lab.lab1.figuras import figura
 
@@ -36,3 +38,36 @@ def _(salida):
 
     fig.tight_layout()
     fig.savefig(salida / "convolucion_circular.png", dpi=120)
+
+
+@figura("convolucion_tiempos")
+def _(salida):
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=500)
+    largos = [4, 8, 16, 32, 64, 128, 256, 512]
+    t_dir = []
+    t_fft = []
+    for m in largos:
+        h = rng.normal(size=m)
+        mejor_dir = np.inf
+        mejor_fft = np.inf
+        for _ in range(3):
+            inicio = time.perf_counter()
+            convolucion_directa(x, h)
+            mejor_dir = min(mejor_dir, time.perf_counter() - inicio)
+            inicio = time.perf_counter()
+            convolucion_fft(x, h)
+            mejor_fft = min(mejor_fft, time.perf_counter() - inicio)
+        t_dir.append(mejor_dir)
+        t_fft.append(mejor_fft)
+
+    fig = Figure(figsize=(6, 4))
+    ax = fig.subplots()
+    ax.loglog(largos, t_dir, "o-", label="directa")
+    ax.loglog(largos, t_fft, "s-", label="por DFT")
+    ax.set(xlabel="largo de h", ylabel="tiempo [s]",
+           title=f"Tiempo de convolucion, len(x) = {len(x)}")
+    ax.grid(True, which="both", alpha=0.3)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(salida / "convolucion_tiempos.png", dpi=120)

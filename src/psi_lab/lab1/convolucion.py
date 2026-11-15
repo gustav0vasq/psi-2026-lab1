@@ -10,10 +10,10 @@ def convolucion_directa(x, h):
     h=np.asarray(h, dtype=float)
     y=np.zeros(len(x) + len(h) -1)
     for i in range(len(x) + len(h) -1):
-        for j in range(len(x)):
-            # h[i-j] solo existe si el indice cae dentro de h
-            if i-j >= 0 and i-j < len(h):
-                y[i] += x[j] * h[i-j]
+        for j in range(len(h)):
+            # x[i-j] solo existe si el indice cae dentro de x
+            if i - j >= 0 and i - j < len(x):
+                y[i] += h[j] * x[i - j]
     return y
         
 def convolucion_fft(x, h):
