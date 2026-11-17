@@ -148,3 +148,37 @@ def _(salida):
     fig.suptitle("Relleno con ceros: mas puntos, misma resolucion (solo depende de T)")
     fig.tight_layout()
     fig.savefig(salida / "dft_relleno.png", dpi=120)
+
+
+@figura("dft_fuga")
+def _(salida):
+    """Tono de 50 Hz (A = 1) y de 80 Hz (A = 1e-3). Rectangular vs. Hann en dB.
+
+    N = 1024 hace que 50 y 80 Hz NO caigan en un bin (bins cada 0,977 Hz), que es lo normal
+    en una senal real: asi aparece la fuga. Con N = 1000 ambos tonos caerian justo en un bin
+    y la rectangular no mostraria fuga, lo que esconderia el efecto que se quiere estudiar.
+    """
+    N = 1024
+    t = np.arange(N) / FS
+    x = np.cos(2 * np.pi * 50 * t) + 1e-3 * np.cos(2 * np.pi * 80 * t)
+
+    fig = Figure(figsize=(9, 4.5))
+    ax = fig.subplots()
+    filas = []
+    for ventana in ("rect", "hann"):
+        f, a = espectro(x, FS, ventana=ventana)
+        db = 20 * np.log10(np.maximum(a, 1e-12))
+        ax.plot(f, db, lw=0.9, label=ventana)
+        cerca_80 = np.abs(f - 80) <= 1
+        fondo = (np.abs(f - 80) > 3) & (np.abs(f - 80) < 10)  # alrededor del tono debil
+        filas.append([ventana, f"{db[cerca_80].max():.1f}", f"{db[fondo].max():.1f}"])
+    ax.axhline(-60, color="k", ls=":", lw=0.8, label="nivel del tono debil (-60 dB)")
+    ax.annotate("tono de 80 Hz\n(A = 10⁻³)", xy=(80, -60), xytext=(110, -30),
+                arrowprops={"arrowstyle": "->"}, fontsize=9)
+    ax.set(xlim=(0, 200), ylim=(-120, 5), xlabel="f [Hz]", ylabel="amplitud [dB]",
+           title=f"Fuga espectral: 50 Hz (A = 1) + 80 Hz (A = 10⁻³), N = {N}, fs = {FS:g} Hz")
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(salida / "dft_fuga.png", dpi=120)
+    guardar_tabla(salida, "dft_fuga", ["ventana", "pico_cerca_80hz_db", "fondo_alrededor_db"], filas)
