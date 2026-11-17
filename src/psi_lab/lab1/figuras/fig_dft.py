@@ -113,3 +113,38 @@ def _(salida):
     fig.tight_layout()
     fig.savefig(salida / "dft_resolucion.png", dpi=120)
     guardar_tabla(salida, "dft_resolucion", ["T_s", "N", "delta_f_hz", "se_separan"], filas)
+
+
+def _dos_tonos(T):
+    """Tonos de 50 y 52 Hz de amplitud 1 durante T segundos a FS."""
+    t = np.arange(round(FS * T)) / FS
+    return np.cos(2 * np.pi * 50 * t) + np.cos(2 * np.pi * 52 * t)
+
+
+@figura("dft_relleno")
+def _(salida):
+    """T = 0,25 s con nfft = 8N. El relleno interpola, no mejora la resolucion."""
+    x = _dos_tonos(0.25)
+    N = x.size
+    f1, a1 = espectro(x, FS)  # bins cada 4 Hz
+    f8, a8 = espectro(x, FS, nfft=8 * N)  # bins cada 0,5 Hz
+    f_ref, a_ref = espectro(_dos_tonos(1.0), FS)  # mas duracion: bins cada 1 Hz
+
+    fig = Figure(figsize=(10, 4))
+    ax_r, ax_t = fig.subplots(1, 2, sharey=True)
+    ax_r.plot(f8, a8, ".-", ms=4, lw=0.8, label=f"nfft = 8N = {8 * N} (cada {FS / (8 * N):g} Hz)")
+    ax_r.plot(f1, a1, "o", ms=7, label=f"nfft = N = {N} (cada {FS / N:g} Hz)")
+    ax_r.set(title="T = 0,25 s: con relleno sigue habiendo un solo lobulo")
+    ax_t.plot(f_ref, a_ref, ".-", ms=4, lw=0.8, color="tab:green",
+              label="T = 1 s, nfft = N = 1000 (cada 1 Hz)")
+    ax_t.set(title="T = 1 s sin relleno: los tonos se separan")
+    for ax in (ax_r, ax_t):
+        for f0 in (50, 52):
+            ax.axvline(f0, color="k", ls=":", lw=0.8)
+        ax.set(xlim=(40, 62), xlabel="f [Hz]")
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=8, loc="upper left")
+    ax_r.set_ylabel("amplitud")
+    fig.suptitle("Relleno con ceros: mas puntos, misma resolucion (solo depende de T)")
+    fig.tight_layout()
+    fig.savefig(salida / "dft_relleno.png", dpi=120)
