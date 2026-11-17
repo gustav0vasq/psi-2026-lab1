@@ -3,14 +3,21 @@
 import numpy as np
 
 
-def _dft_por_definicion(x, signo):
-    """sum_n x[n] exp(signo * 2j pi k n / N) para k = 0..N-1. signo = -1 o +1."""
+def _dft_por_definicion(x, signo, filas_por_bloque=256):
+    """sum_n x[n] exp(signo * 2j pi k n / N) para k = 0..N-1. signo = -1 o +1.
+
+    Calcula X por bloques de filas k: sigue siendo O(N^2) en operaciones, pero no arma
+    la matriz N x N completa para evitar problemas de memoria
+    """
     x = np.asarray(x)
     N = x.size
     n = np.arange(N)
-    k = n[:, None]
-    W = np.exp(signo * 2j * np.pi * k * n / N)
-    return W @ x
+    X = np.empty(N, dtype=complex)
+    for inicio in range(0, N, filas_por_bloque):
+        k = np.arange(inicio, min(inicio + filas_por_bloque, N))[:, None]
+        W = np.exp(signo * 2j * np.pi * k * n / N)      # solo estas filas de W
+        X[inicio : inicio + k.size] = W @ x
+    return X
 
 def dft(x):
     """DFT por definicion, O(N^2): X[k] = sum_n x[n] exp(-2j pi k n / N)."""
