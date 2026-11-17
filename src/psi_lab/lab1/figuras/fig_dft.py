@@ -5,7 +5,7 @@ import time
 import numpy as np
 from matplotlib.figure import Figure
 
-from psi_lab.lab1.dft import dft
+from psi_lab.lab1.dft import dft, espectro
 from psi_lab.lab1.figuras import figura, guardar_tabla
 
 N_TIEMPOS = 2 ** np.arange(4, 13) 
@@ -67,3 +67,49 @@ def _(salida):
         ["N", "t_dft_s", "t_fft_s", "razon_dft_fft"],
         [[int(N), f"{a:.3e}", f"{b:.3e}", f"{a / b:.0f}"] for N, a, b in zip(N_TIEMPOS, t_dft, t_fft)],
     )
+
+
+FS = 1000.0  # [Hz]
+NFFT_FINO = 8192  # relleno para dibujar la forma "continua" del espectro
+
+
+def _picos(f, a, f_min, f_max, fraccion=0.5):
+    """Frecuencias de los maximos locales en [f_min, f_max] que superan fraccion * maximo."""
+    m = (f >= f_min) & (f <= f_max)
+    f, a = f[m], a[m]
+    es_pico = (a[1:-1] > a[:-2]) & (a[1:-1] >= a[2:]) & (a[1:-1] > fraccion * a.max())
+    return f[1:-1][es_pico]
+
+
+@figura("dft_resolucion")
+def _(salida):
+    """Tarea 2.3: dos tonos de 50 y 52 Hz con duraciones T; se separan si 1/T <= 2 Hz."""
+    duraciones = (0.25, 0.5, 1.0, 2.0)
+    fig = Figure(figsize=(10, 6))
+    axs = fig.subplots(2, 2, sharey=True).ravel()
+    filas = []
+    for ax, T in zip(axs, duraciones):
+        N = round(FS * T)
+        t = np.arange(N) / FS
+        x = np.cos(2 * np.pi * 50 * t) + np.cos(2 * np.pi * 52 * t)
+        f_bins, a_bins = espectro(x, FS)  # los N bins reales, cada 1/T Hz
+        f_fino, a_fino = espectro(x, FS, nfft=NFFT_FINO) 
+        ax.plot(f_fino, a_fino, lw=0.9, label="forma (relleno a 8192)")
+        ax.plot(f_bins, a_bins, "o", ms=5, label=f"bins de la DFT (cada {1 / T:g} Hz)")
+        for f0 in (50, 52):
+            ax.axvline(f0, color="k", ls=":", lw=0.8)
+        picos = _picos(f_fino, a_fino, 47, 55)
+        separados = len(picos) >= 2
+        ax.set(xlim=(40, 62), title=f"T = {T:g} s, N = {N}, Δf = 1/T = {1 / T:g} Hz"
+               f" → {'se separan' if separados else 'NO se separan'}")
+        ax.grid(alpha=0.3)
+        filas.append([T, N, f"{1 / T:g}", "si" if separados else "no"])
+    for ax in axs[2:]:
+        ax.set_xlabel("f [Hz]")
+    for ax in axs[::2]:
+        ax.set_ylabel("amplitud")
+    axs[0].legend(fontsize=8)
+    fig.suptitle("Resolucion: tonos de 50 y 52 Hz (fs = 1000 Hz, ventana rectangular)")
+    fig.tight_layout()
+    fig.savefig(salida / "dft_resolucion.png", dpi=120)
+    guardar_tabla(salida, "dft_resolucion", ["T_s", "N", "delta_f_hz", "se_separan"], filas)
