@@ -1,4 +1,4 @@
-"""Convolucion lineal vs circular """
+"""Convolucion lineal vs circular"""
 
 import time
 
@@ -33,8 +33,7 @@ def _(salida):
 
     ax_circ.stem(np.arange(len(circular)), circular)
     ax_circ.axvspan(-0.5, len(h) - 1.5, alpha=0.2, color="red")
-    ax_circ.set(xlabel="n", ylabel="y[n]",
-                title=f"Circular, sin relleno (largo {len(circular)})")
+    ax_circ.set(xlabel="n", ylabel="y[n]", title=f"Circular, sin relleno (largo {len(circular)})")
 
     fig.tight_layout()
     fig.savefig(salida / "convolucion_circular.png", dpi=120)
@@ -65,8 +64,9 @@ def _(salida):
     ax = fig.subplots()
     ax.loglog(largos, t_dir, "o-", label="directa")
     ax.loglog(largos, t_fft, "s-", label="por DFT")
-    ax.set(xlabel="largo de h", ylabel="tiempo [s]",
-           title=f"Tiempo de convolucion, len(x) = {len(x)}")
+    ax.set(
+        xlabel="largo de h", ylabel="tiempo [s]", title=f"Tiempo de convolucion, len(x) = {len(x)}"
+    )
     ax.grid(True, which="both", alpha=0.3)
     ax.legend()
     fig.tight_layout()
