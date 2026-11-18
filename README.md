@@ -25,6 +25,7 @@ El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
 | Módulo | Función | Argumentos | Retorna |
 |---|---|---|---|
 | `psi_lab.lab1.muestreo` | `muestrear(fun, fs, duracion)` | fun: callable de t [s]; fs [Hz]; duracion [s] | `(t, x)` arreglos 1D de largo `round(fs*duracion)` |
+| `psi_lab.lab1.muestreo` | `frecuencia_alias(f, fs)` | f [Hz], fs [Hz] (escalares o arreglos) | frecuencia aparente [Hz] en `[0, fs/2]`: `\|f - fs*round(f/fs)\|` |
 | `psi_lab.lab1.sinteticos` | `tono(f, fs, duracion)` | f [Hz]; fs [Hz]; duracion [s] | `x` 1D de largo `round(fs*duracion)`, `cos(2 pi f t)` de amplitud 1 |
 | `psi_lab.lab1.sinteticos` | `suma_tonos(frecuencias, fs, duracion)` | frecuencias: secuencia de f [Hz]; fs [Hz]; duracion [s] | `x` 1D, suma de tonos de amplitud 1 |
 | `psi_lab.lab1.sinteticos` | `chirp(f0, f1, fs, duracion)` | f0, f1 [Hz]; fs [Hz]; duracion [s] | `x` 1D, barrido lineal de f0 a f1, amplitud 1 |
