@@ -26,3 +26,19 @@ def convolucion_fft(x, h):
     Y = dft(x_rell) * dft(h_rell)
     # nos quedamos con la parte real
     return idft(Y).real
+
+def convolucion_separable_2d(img, h_filas, h_cols):
+    """Convolucion 2D completa con un nucleo separable"""
+    img = np.asarray(img, dtype=float)
+    h_filas = np.asarray(h_filas, dtype=float)
+    h_cols = np.asarray(h_cols, dtype=float)
+    alto, ancho = img.shape
+
+    intermedio = np.zeros((alto, ancho + len(h_filas) - 1))
+    for i in range(alto):
+        intermedio[i, :] = convolucion_directa(img[i, :], h_filas)
+
+    salida = np.zeros((alto + len(h_cols) - 1, intermedio.shape[1]))
+    for j in range(intermedio.shape[1]):
+        salida[:, j] = convolucion_directa(intermedio[:, j], h_cols)
+    return salida
