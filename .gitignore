@@ -10,3 +10,5 @@ dist/
 .DS_Store
 out/
 data/
+*.pdf
+!informe/lab1.pdf
