@@ -40,6 +40,10 @@ El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
 | `psi_lab.lab1.filtros` | `filtrar(x, h)` | x: 1D; h: 1D | `y` 1D del largo de x, sin retardo (compensa `(n_coef - 1) // 2` muestras) |
 | `psi_lab.lab1.filtros` | `crear_ventana(nombre, n_coef)` | nombre: `"rect"`, `"hann"`, `"hamming"`, `"blackman"` | ventana simétrica 1D de largo n_coef |
 | `psi_lab.lab1.filtros` | `medir_pasabajos(h, fs, fc, n=32768)` | h: pasabajos; fs, fc [Hz] | `(ancho_transicion [Hz], atenuacion [dB])`, medidos entre `1 - delta` y `delta` |
+| `psi_lab.lab1.caso_imagen` | `dft2(img)` | img: float64 `(alto, ancho)` | `E` complejo `(alto, ancho)`, sin shift, DC en `E[0, 0]` |
+| `psi_lab.lab1.caso_imagen` | `idft2(E)` | E: complejo `(alto, ancho)` sin shift | complejo `(alto, ancho)`; la imagen es `.real` |
+| `psi_lab.lab1.caso_imagen` | `espectro_log(E)` | E: complejo sin shift | float `(alto, ancho)`, `log(1 + \|E\|)` **ya centrada** (DC en `(alto//2, ancho//2)`); solo para graficar |
+| `psi_lab.lab1.caso_imagen` | `fase(E)` | E: complejo sin shift | float `(alto, ancho)`, fase en radianes en `[-pi, pi]`, sin shift |
 | ... | ... | ... | ... |
 
 ## Figuras y tablas del informe
