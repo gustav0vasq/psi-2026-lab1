@@ -3,6 +3,7 @@
 import numpy as np
 
 from psi_lab.lab1.caso_imagen.fourier2d import dft2, idft2
+from psi_lab.lab1.convolucion import convolucion_separable_2d
 
 
 def _distancias_cuadradas(forma, pico):
@@ -68,3 +69,23 @@ def aplicar_mascara(img, H):
     if img.shape != H.shape:
         raise ValueError(f"img {img.shape} y H {H.shape} deben tener la misma forma")
     return idft2(dft2(img) * H)
+
+
+def pasabajos_gaussiano(img, sigma):
+    """Pasabajos espacial: convolucion de `img` con un nucleo gaussiano separable. Misma forma.
+
+    Es la linea base contra la que se compara el notch. Nucleo de largo 2 ceil(3 sigma) + 1,
+    normalizado a suma 1 (ganancia 1 en DC). Se extiende la imagen por reflejo antes de convolucionar
+    para que los bordes no se oscurezcan (convolucion con ceros) y se recorta el centro despues.
+    Usa `convolucion_separable_2d` del grupo; sigma en pixeles, > 0.
+    """
+    if sigma <= 0:
+        raise ValueError("sigma debe ser > 0")
+    img = np.asarray(img, dtype=float)
+    r = int(np.ceil(3 * sigma))
+    n = np.arange(-r, r + 1)
+    h = np.exp(-(n**2) / (2 * sigma**2))
+    h /= h.sum()
+    alto, ancho = img.shape
+    completa = convolucion_separable_2d(np.pad(img, r, mode="reflect"), h, h)
+    return completa[2 * r : 2 * r + alto, 2 * r : 2 * r + ancho]

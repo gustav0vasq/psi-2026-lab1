@@ -49,6 +49,7 @@ El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
 | `psi_lab.lab1.caso_imagen` | `notch_gaussiano(forma, picos, sigma)` | igual; sigma [bins] > 0 | `H = prod_i (1 - exp(-d_i^2 / 2 sigma^2))` en [0, 1], 0 exacto en cada pico |
 | `psi_lab.lab1.caso_imagen` | `aplicar_mascara(img, H)` | img: 2D float; H: misma forma, sin shift | complejo `idft2(dft2(img) * H)`; la imagen es `.real` (imag ~0 si H tiene pares completos) |
 | `psi_lab.lab1.caso_imagen` | `psnr(a, b, rango=1.0)` | a, b: misma forma; rango: valor máximo (1.0 en [0, 1]) | PSNR [dB] `= 10 log10(rango^2 / MSE)`; `inf` si son idénticas |
+| `psi_lab.lab1.caso_imagen.notch` | `pasabajos_gaussiano(img, sigma)` | img: 2D float; sigma [px] > 0 | imagen 2D de la misma forma: convolución separable con un núcleo gaussiano normalizado (largo `2 ceil(3 sigma) + 1`), bordes por reflejo; ganancia 1 en DC |
 | ... | ... | ... | ... |
 
 ## Figuras y tablas del informe

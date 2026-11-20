@@ -12,6 +12,7 @@ from psi_lab.lab1.caso_imagen import (
     notch_ideal,
     psnr,
 )
+from psi_lab.lab1.caso_imagen.notch import pasabajos_gaussiano
 
 FORMA = (64, 80)  # (alto, ancho)
 # Interferencias (amplitud, ku, kv); |(kv, ku)| > 10 bins para quedar fuera del DC que excluye
@@ -193,3 +194,39 @@ def test_psnr_es_simetrico_y_baja_con_mas_error():
 def test_psnr_exige_la_misma_forma():
     with pytest.raises(ValueError):
         psnr(np.zeros((3, 3)), np.zeros((3, 4)))
+
+
+# Pasabajos gaussiano (linea base de comparacion)
+
+
+def test_pasabajos_gaussiano_conserva_forma_y_constantes():
+    plana = np.full(FORMA, 0.7)
+    res = pasabajos_gaussiano(plana, 2.0)
+    assert res.shape == FORMA
+    assert np.allclose(res, 0.7)  # ganancia 1 en DC, sin oscurecer los bordes
+
+
+def test_pasabajos_gaussiano_atenua_un_coseno_segun_la_teoria():
+    # La transformada de una gaussiana es otra gaussiana: |H(f)| = exp(-2 pi^2 sigma^2 f^2)
+    alto, ancho = 128, 128
+    ku, sigma = 12, 2.0
+    x = np.arange(ancho)[None, :] * np.ones((alto, 1))
+    img = np.cos(2 * np.pi * ku * x / ancho)
+    res = pasabajos_gaussiano(img, sigma)
+    centro = res[:, 32:-32]  # lejos de los bordes, donde el reflejo no importa
+    ganancia = np.abs(centro).max() / np.abs(img[:, 32:-32]).max()
+    esperada = np.exp(-2 * np.pi**2 * sigma**2 * (ku / ancho) ** 2)
+    assert ganancia == pytest.approx(esperada, rel=0.02)
+
+
+def test_pasabajos_gaussiano_coincide_con_scipy():
+    from scipy.ndimage import gaussian_filter  # referencia, solo dentro de las pruebas
+
+    img = _imagen_suave()
+    esperado = gaussian_filter(img, sigma=2.0, mode="mirror", truncate=3.0)
+    assert np.allclose(pasabajos_gaussiano(img, 2.0), esperado, atol=1e-3)
+
+
+def test_pasabajos_gaussiano_sigma_invalido_falla():
+    with pytest.raises(ValueError):
+        pasabajos_gaussiano(np.zeros((4, 4)), 0)

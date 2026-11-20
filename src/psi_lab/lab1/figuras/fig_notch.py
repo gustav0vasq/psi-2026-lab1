@@ -1,13 +1,14 @@
 """Tarea C3: filtros notch 2D (ideal y gaussiano), pasabajos espacial y metricas. Dueno: R3.
 
-Auxiliares de biblioteca declarados (permitidos por el enunciado): `skimage.data.camera` (imagen),
-`skimage.metrics.structural_similarity` (SSIM) y `scipy.ndimage.gaussian_filter` (pasabajos
-espacial de comparacion). PSNR, DFT 2D, deteccion de picos y notch son propios.
+Auxiliares de biblioteca declarados (permitidos por el enunciado): `skimage.data.camera` (imagen
+de prueba) y `skimage.metrics.structural_similarity` (SSIM, lo exige el enunciado). PSNR, DFT 2D,
+deteccion de picos, notch y el pasabajos gaussiano (convolucion separable de R4) son propios.
 """
+
+from functools import cache
 
 import numpy as np
 from matplotlib.figure import Figure
-from scipy.ndimage import gaussian_filter
 from skimage import data
 from skimage.metrics import structural_similarity
 
@@ -21,6 +22,7 @@ from psi_lab.lab1.caso_imagen import (
     notch_ideal,
     psnr,
 )
+from psi_lab.lab1.caso_imagen.notch import pasabajos_gaussiano
 from psi_lab.lab1.figuras import figura, guardar_tabla
 
 # Interferencias (amplitud, ku, kv): ciclos enteros sobre la imagen de 512 x 512. Las dos primeras
@@ -47,10 +49,17 @@ def _metricas(limpia, restaurada):
     return psnr(restaurada, limpia), structural_similarity(limpia, restaurada, data_range=1.0)
 
 
-def _filtrar(ruidosa, tipo, parametro):
+@cache
+def _pasabajos(n_interferencias, sigma):
+    """Pasabajos gaussiano propio sobre la imagen con `n_interferencias`. Es lento (convolucion
+    directa, ~3 a 10 s por llamada en 512 x 512), asi que se calcula una vez y se reutiliza."""
+    return pasabajos_gaussiano(_con_ruido(_imagen(), n_interferencias), sigma)
+
+
+def _filtrar(ruidosa, tipo, parametro, n_interferencias=2):
     """Restaura `ruidosa` con el metodo `tipo`: detecta los picos solo y aplica la mascara."""
     if tipo == "pasabajos":
-        return gaussian_filter(ruidosa, sigma=parametro, mode="reflect")
+        return _pasabajos(n_interferencias, parametro)
     picos = detectar_picos(dft2(ruidosa), UMBRAL)
     mascara = notch_ideal if tipo == "notch_ideal" else notch_gaussiano
     return aplicar_mascara(ruidosa, mascara(ruidosa.shape, picos, parametro)).real
@@ -70,7 +79,7 @@ def _(salida):
         (f"Notch gaussiano (σ = {SIGMA_ELEGIDO:g})",
          _filtrar(ruidosa, "notch_gaussiano", SIGMA_ELEGIDO)),
         (f"Pasabajos gaussiano (σ = {SIGMA_PASABAJOS:g} px)",
-         _filtrar(ruidosa, "pasabajos", SIGMA_PASABAJOS)),
+         _filtrar(ruidosa, "pasabajos", SIGMA_PASABAJOS, 2)),
     ]
 
     fig = Figure(figsize=(14, 7), layout="constrained")
@@ -101,7 +110,7 @@ def _(salida):
     barridos = [
         ("notch_ideal", "radio [bins]", (0, 1, 2, 4, 8, 16, 32)),
         ("notch_gaussiano", "σ [bins]", (0.5, 1, 2, 4, 8, 16)),
-        ("pasabajos", "σ del pasabajos [px]", (1, 2, 4, 6, 8, 12)),
+        ("pasabajos", "σ del pasabajos [px]", (2, 4, 6, 8)),
     ]
     fig = Figure(figsize=(12, 3.8), layout="constrained")
     for ax, (tipo, etiqueta, valores) in zip(fig.subplots(1, 3), barridos, strict=True):
@@ -129,13 +138,17 @@ def _(salida):
         + [("notch_gaussiano", s) for s in (0.5, 1, 2, 4, 8)]
         + [("pasabajos", s) for s in (2, 4, 6, 8)]
     )
+    # El pasabajos no depende de la interferencia (actua igual sobre toda la imagen) y es lento:
+    # solo se evalua con 2 interferencias, las mismas que usan las otras figuras.
     filas = []
     for n in (1, 2, 3):
         ruidosa = _con_ruido(img, n)
         p0, s0 = _metricas(img, ruidosa)
         filas.append([n, "sin_filtrar", "", round(p0, 2), round(s0, 4)])
         for tipo, parametro in configuraciones:
-            p, s = _metricas(img, _filtrar(ruidosa, tipo, parametro))
+            if tipo == "pasabajos" and n != 2:
+                continue
+            p, s = _metricas(img, _filtrar(ruidosa, tipo, parametro, n))
             filas.append([n, tipo, parametro, round(p, 2), round(s, 4)])
     guardar_tabla(salida, "notch_psnr_ssim",
                   ["interferencias", "metodo", "parametro", "psnr_db", "ssim"], filas)
