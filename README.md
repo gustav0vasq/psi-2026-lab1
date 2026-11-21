@@ -45,6 +45,11 @@ El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
 | `psi_lab.lab1.caso_imagen` | `idft2(E)` | E: complejo `(alto, ancho)` sin shift | complejo `(alto, ancho)`; la imagen es `.real` |
 | `psi_lab.lab1.caso_imagen` | `espectro_log(E)` | E: complejo sin shift | float `(alto, ancho)`, `log(1 + \|E\|)` **ya centrada** (DC en `(alto//2, ancho//2)`); solo para graficar |
 | `psi_lab.lab1.caso_imagen` | `fase(E)` | E: complejo sin shift | float `(alto, ancho)`, fase en radianes en `[-pi, pi]`, sin shift |
+| `psi_lab.lab1.caso_imagen` | `notch_ideal(forma, picos, radio)` | forma: `(alto, ancho)`; picos: `(n, 2)` int `(fila, columna)` sin shift, **ambos** picos de cada par conjugado; radio [bins] >= 0 | `H` float `(alto, ancho)` en {0, 1}: 0 a distancia **periódica** <= radio de algún pico, 1 fuera |
+| `psi_lab.lab1.caso_imagen` | `notch_gaussiano(forma, picos, sigma)` | igual; sigma [bins] > 0 | `H = prod_i (1 - exp(-d_i^2 / 2 sigma^2))` en [0, 1], 0 exacto en cada pico |
+| `psi_lab.lab1.caso_imagen` | `aplicar_mascara(img, H)` | img: 2D float; H: misma forma, sin shift | complejo `idft2(dft2(img) * H)`; la imagen es `.real` (imag ~0 si H tiene pares completos) |
+| `psi_lab.lab1.caso_imagen` | `psnr(a, b, rango=1.0)` | a, b: misma forma; rango: valor máximo (1.0 en [0, 1]) | PSNR [dB] `= 10 log10(rango^2 / MSE)`; `inf` si son idénticas |
+| `psi_lab.lab1.caso_imagen.notch` | `pasabajos_gaussiano(img, sigma)` | img: 2D float; sigma [px] > 0 | imagen 2D de la misma forma: convolución separable con un núcleo gaussiano normalizado (largo `2 ceil(3 sigma) + 1`), bordes por reflejo; ganancia 1 en DC |
 | ... | ... | ... | ... |
 
 ## Figuras y tablas del informe
