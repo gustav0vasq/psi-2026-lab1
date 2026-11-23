@@ -20,12 +20,16 @@ docker compose run --rm lab1    # reproduce todas las figuras y tablas en out/
 ## Datos
 No se versionan. `datos.py` los descarga o genera (carpeta `data/`, o `PSI_DATOS`).
 El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
+El caso real (C4, `fig_caso_real.py`) usa dos fotos con patrón periódico real en `data/caso_real/` (`diario.jpg`, `cielo.jpg`).
 
 ## Interfaz pública (módulo, firma, unidades, forma)
 | Módulo | Función | Argumentos | Retorna |
 |---|---|---|---|
 | `psi_lab.lab1.muestreo` | `muestrear(fun, fs, duracion)` | fun: callable de t [s]; fs [Hz]; duracion [s] | `(t, x)` arreglos 1D de largo `round(fs*duracion)` |
 | `psi_lab.lab1.muestreo` | `frecuencia_alias(f, fs)` | f [Hz], fs [Hz] (escalares o arreglos) | frecuencia aparente [Hz] en `[0, fs/2]`: `\|f - fs*round(f/fs)\|` |
+| `psi_lab.lab1.dft` | `dft(x)` | x: 1D real o complejo, largo N | `X` complejo 1D de largo N, `X[k] = sum_n x[n] exp(-2j pi k n / N)`, sin normalizar (O(N^2)) |
+| `psi_lab.lab1.dft` | `idft(X)` | X: 1D complejo, largo N | `x` complejo 1D de largo N, incluye el factor `1/N`; para señales reales usar `.real` |
+| `psi_lab.lab1.dft` | `espectro(x, fs, ventana="rect", nfft=None)` | x: 1D real de largo N; fs [Hz]; ventana: `"rect"`, `"hann"` o `"hamming"`; nfft >= N (rellena con ceros; por defecto N) | `(freqs, amp)` 1D de largo `nfft // 2 + 1`: freqs [Hz] = `k fs / nfft` en `[0, fs/2]`; amplitud de un lado (un tono `A cos(2 pi f t)` en un bin da un pico de altura A) |
 | `psi_lab.lab1.sinteticos` | `tono(f, fs, duracion)` | f [Hz]; fs [Hz]; duracion [s] | `x` 1D de largo `round(fs*duracion)`, `cos(2 pi f t)` de amplitud 1 |
 | `psi_lab.lab1.sinteticos` | `suma_tonos(frecuencias, fs, duracion)` | frecuencias: secuencia de f [Hz]; fs [Hz]; duracion [s] | `x` 1D, suma de tonos de amplitud 1 |
 | `psi_lab.lab1.sinteticos` | `chirp(f0, f1, fs, duracion)` | f0, f1 [Hz]; fs [Hz]; duracion [s] | `x` 1D, barrido lineal de f0 a f1, amplitud 1 |
@@ -45,6 +49,9 @@ El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
 | `psi_lab.lab1.caso_imagen` | `idft2(E)` | E: complejo `(alto, ancho)` sin shift | complejo `(alto, ancho)`; la imagen es `.real` |
 | `psi_lab.lab1.caso_imagen` | `espectro_log(E)` | E: complejo sin shift | float `(alto, ancho)`, `log(1 + \|E\|)` **ya centrada** (DC en `(alto//2, ancho//2)`); solo para graficar |
 | `psi_lab.lab1.caso_imagen` | `fase(E)` | E: complejo sin shift | float `(alto, ancho)`, fase en radianes en `[-pi, pi]`, sin shift |
+| `psi_lab.lab1.caso_imagen` | `coseno_2d(forma, ku, kv, amplitud)` | forma: `(alto, ancho)`; ku, kv: ciclos **enteros** sobre la imagen (columnas y filas); amplitud | float `(alto, ancho)`, `amplitud cos(2 pi (ku x / ancho + kv y / alto))`; picos exactos en `(kv, ku)` y `(-kv, -ku)` (mod forma) |
+| `psi_lab.lab1.caso_imagen` | `agregar_interferencia(img, ku, kv, amplitud)` | img: 2D; ku, kv, amplitud como en `coseno_2d` | float, `img + coseno_2d(img.shape, ku, kv, amplitud)`, sin recortar a [0, 1] |
+| `psi_lab.lab1.caso_imagen` | `detectar_picos(E, umbral, *, radio_dc=10)` | E: complejo `(alto, ancho)` sin shift; umbral: fracción en (0, 1] del máximo de \|E\| fuera del DC; radio_dc [bins]: disco excluido alrededor del DC | int `(n, 2)` `(fila, columna)` sin shift, con **ambos** picos de cada par conjugado; `(0, 2)` si no queda nada fuera del disco |
 | `psi_lab.lab1.caso_imagen` | `notch_ideal(forma, picos, radio)` | forma: `(alto, ancho)`; picos: `(n, 2)` int `(fila, columna)` sin shift, **ambos** picos de cada par conjugado; radio [bins] >= 0 | `H` float `(alto, ancho)` en {0, 1}: 0 a distancia **periódica** <= radio de algún pico, 1 fuera |
 | `psi_lab.lab1.caso_imagen` | `notch_gaussiano(forma, picos, sigma)` | igual; sigma [bins] > 0 | `H = prod_i (1 - exp(-d_i^2 / 2 sigma^2))` en [0, 1], 0 exacto en cada pico |
 | `psi_lab.lab1.caso_imagen` | `aplicar_mascara(img, H)` | img: 2D float; H: misma forma, sin shift | complejo `idft2(dft2(img) * H)`; la imagen es `.real` (imag ~0 si H tiene pares completos) |
