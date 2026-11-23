@@ -90,6 +90,7 @@ def _evaluar(img, foto):
 
 @figura("caso_real", requiere_datos=True)
 def _(salida):
+    datos.descargar_fotos()
     filas = []
     for foto in FOTOS:
         img = _cargar(foto)
