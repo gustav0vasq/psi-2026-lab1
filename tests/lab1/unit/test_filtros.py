@@ -216,3 +216,11 @@ def test_filtrar_impulso_devuelve_h_centrada():
     y = filtrar(x, h)
     assert np.argmax(y) == 150
     assert np.allclose(y[150 - N // 2 : 150 + N // 2 + 1], h)
+
+
+def test_filtrar_es_la_convolucion_lineal_recortada_al_centro():
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=300)
+    h = fir_pasabajos(100, FS, N)
+    retardo = (N - 1) // 2
+    assert np.allclose(filtrar(x, h), np.convolve(x, h)[retardo : retardo + x.size])

@@ -10,7 +10,7 @@ def coseno_2d(forma, ku, kv, amplitud):
     bins (kv, ku) y (alto - kv, ancho - ku) del espectro sin shift.
     """
     alto, ancho = forma
-    y = np.arange(alto)[:, None] # columna
+    y = np.arange(alto)[:, None]  # columna
     x = np.arange(ancho)[None, :]
     return amplitud * np.cos(2 * np.pi * (ku * x / ancho + kv * y / alto))
 
@@ -20,8 +20,8 @@ def agregar_interferencia(img, ku, kv, amplitud):
     img = np.asarray(img, dtype=float)
     return img + coseno_2d(img.shape, ku, kv, amplitud)
 
-    
-def detectar_picos(E, umbral, *, radio_dc = 10):
+
+def detectar_picos(E, umbral, *, radio_dc=10):
     """Picos de |E| por sobre `umbral` (fraccion del maximo de |E| fuera del DC).
 
     Excluye el DC (bin [0, 0]) y devuelve SIEMPRE ambos picos de cada par conjugado.

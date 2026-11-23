@@ -42,11 +42,13 @@ El caso real (C4, `fig_caso_real.py`) usa dos fotos con patrón periódico real 
 | `psi_lab.lab1.filtros` | `fir_pasabanda(f1, f2, fs, n_coef, ventana="hamming")` | f1 < f2 [Hz] en (0, fs/2) | `h = h_lp(f2) - h_lp(f1)`; ganancia 0 en DC |
 | `psi_lab.lab1.filtros` | `fir_rechazabanda(f1, f2, fs, n_coef, ventana="hamming")` | f1 < f2 [Hz]; `n_coef` **impar** | `h = delta - h_pasabanda`; ganancia 1 en DC |
 | `psi_lab.lab1.filtros` | `respuesta_frecuencia(h, fs, n=4096)` | h: 1D; fs [Hz]; n: número de frecuencias | `(freqs, H)`: freqs [Hz] = `i fs / (2n)`, i = 0..n-1 (en [0, fs/2)); `H` complejo de largo n |
-| `psi_lab.lab1.filtros` | `filtrar(x, h)` | x: 1D; h: 1D | `y` 1D del largo de x, sin retardo (compensa `(n_coef - 1) // 2` muestras) |
-| `psi_lab.lab1.filtros` | `crear_ventana(nombre, n_coef)` | nombre: `"rect"`, `"hann"`, `"hamming"`, `"blackman"` | ventana simétrica 1D de largo n_coef |
+| `psi_lab.lab1.filtros` | `filtrar(x, h)` | x: 1D; h: 1D | `y` 1D del largo de x, sin retardo (compensa `(n_coef - 1) // 2` muestras); usa `convolucion_fft` |
+| `psi_lab.lab1.ventanas` (reexportada en `filtros`) | `crear_ventana(nombre, n_coef)` | nombre: `"rect"`, `"hann"`, `"hamming"`, `"blackman"` | ventana simétrica 1D de largo n_coef |
 | `psi_lab.lab1.filtros` | `medir_pasabajos(h, fs, fc, n=32768)` | h: pasabajos; fs, fc [Hz] | `(ancho_transicion [Hz], atenuacion [dB])`, medidos entre `1 - delta` y `delta` |
 | `psi_lab.lab1.convolucion` | `convolucion_directa(x, h)` | x, h: 1D (listas o arreglos) | `y` 1D de largo `len(x) + len(h) - 1`, convolución lineal por definición (dos ciclos) |
-| `psi_lab.lab1.convolucion` | `convolucion_fft(x, h)` | igual que la directa | mismo `y`, con `idft(dft(x) * dft(h))` rellenando con ceros hasta `len(x) + len(h) - 1` (sin relleno sale la circular) |
+| `psi_lab.lab1.convolucion` | `convolucion_fft(x, h)` | igual que la directa | mismo `y`, con FFT radix-2 propia: rellena con ceros hasta una potencia de 2 >= `len(x) + len(h) - 1`, multiplica los espectros y recorta (sin relleno sale la circular) |
+| `psi_lab.lab1.convolucion` | `fft_radix2(x)` | x: 1D de largo potencia de 2 (`ValueError` si no) | `X` complejo 1D, igual que `dft(x)` pero O(N log N) (Cooley-Tukey) |
+| `psi_lab.lab1.convolucion` | `ifft_radix2(X)` | X: 1D de largo potencia de 2 | `x` complejo 1D, incluye el factor `1/N` |
 | `psi_lab.lab1.convolucion` | `convolucion_separable_2d(img, h_filas, h_cols)` | img: 2D `(alto, ancho)`; h_filas, h_cols: 1D | 2D de `(alto + len(h_cols) - 1, ancho + len(h_filas) - 1)`: h_filas por cada fila y h_cols por cada columna, igual que convolucionar con `np.outer(h_cols, h_filas)` |
 | `psi_lab.lab1.caso_imagen` | `dft2(img)` | img: float64 `(alto, ancho)` | `E` complejo `(alto, ancho)`, sin shift, DC en `E[0, 0]` |
 | `psi_lab.lab1.caso_imagen` | `idft2(E)` | E: complejo `(alto, ancho)` sin shift | complejo `(alto, ancho)`; la imagen es `.real` |
@@ -59,7 +61,7 @@ El caso real (C4, `fig_caso_real.py`) usa dos fotos con patrón periódico real 
 | `psi_lab.lab1.caso_imagen` | `notch_gaussiano(forma, picos, sigma)` | igual; sigma [bins] > 0 | `H = prod_i (1 - exp(-d_i^2 / 2 sigma^2))` en [0, 1], 0 exacto en cada pico |
 | `psi_lab.lab1.caso_imagen` | `aplicar_mascara(img, H)` | img: 2D float; H: misma forma, sin shift | complejo `idft2(dft2(img) * H)`; la imagen es `.real` (imag ~0 si H tiene pares completos) |
 | `psi_lab.lab1.caso_imagen` | `psnr(a, b, rango=1.0)` | a, b: misma forma; rango: valor máximo (1.0 en [0, 1]) | PSNR [dB] `= 10 log10(rango^2 / MSE)`; `inf` si son idénticas |
-| `psi_lab.lab1.caso_imagen.notch` | `pasabajos_gaussiano(img, sigma)` | img: 2D float; sigma [px] > 0 | imagen 2D de la misma forma: convolución separable con un núcleo gaussiano normalizado (largo `2 ceil(3 sigma) + 1`), bordes por reflejo; ganancia 1 en DC |
+| `psi_lab.lab1.caso_imagen` | `pasabajos_gaussiano(img, sigma)` | img: 2D float; sigma [px] > 0 | imagen 2D de la misma forma: convolución separable con un núcleo gaussiano normalizado (largo `2 ceil(3 sigma) + 1`), bordes por reflejo; ganancia 1 en DC |
 | `psi_lab.lab1.caso_imagen` | `zone_plate(M)` | M: lado en px (entero) | float `(M, M)` en [0, 1], `(1 + cos(pi (x^2 + y^2) / M)) / 2` con x, y centradas; frecuencia local `r / M` ciclos/px, llega a 0.5 en el borde |
 | `psi_lab.lab1.caso_imagen` | `reducir(img, k)` | img: 2D; k: entero >= 1 | `img[::k, ::k]` (1 de cada k px), **sin** filtrar antes |
 | `psi_lab.lab1.caso_imagen` | `pasabajos_separable_2d(img, fc, n_coef)` | img: 2D float; fc [ciclos/px] en (0, 0.5); n_coef: entero | imagen 2D de la misma forma: `fir_pasabajos(fc, 1, n_coef)` por filas y columnas, recortada al centro; ganancia 1 en DC, bordes oscurecidos ~n_coef/2 px por el relleno con ceros |
@@ -82,7 +84,6 @@ def _(salida):                               # salida: Path de la carpeta de sal
 - Los nombres de figura son únicos (un duplicado falla al importar).
 - Con `psi-lab1 --sintetico` se omiten las figuras con `requiere_datos=True` (así corre el CI).
 - Si una figura lanza una excepción, el comando falla: no se ocultan errores.
-- `fig_ejemplo.py` es de relleno y se elimina cuando haya figuras reales.
 
 ## Estructura
-`src/psi_lab/lab1/` (código; `figuras/` con un archivo `fig_*.py` por figura), `tests/lab1/{unit,integration}/`, `informe/lab1.pdf`.
+`src/psi_lab/lab1/` (código; `caso_imagen/` con un archivo por tema del caso C; `figuras/` con un archivo `fig_*.py` por figura; `ventanas.py` con las ventanas compartidas), `tests/lab1/{unit,integration}/`, `informe/lab1.pdf`.

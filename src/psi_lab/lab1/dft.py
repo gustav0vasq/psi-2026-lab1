@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from psi_lab.lab1.ventanas import crear_ventana
+
 
 def _dft_por_definicion(x, signo, filas_por_bloque=256):
     """sum_n x[n] exp(signo * 2j pi k n / N) para k = 0..N-1. signo = -1 o +1.
@@ -60,15 +62,11 @@ def espectro(x, fs, ventana="rect", nfft=None):
     freqs = np.arange(nfft // 2 + 1) * fs / nfft
     return freqs, amp
 
-_VENTANAS = ("rect", "hann", "hamming")
+_VENTANAS = ("rect", "hann", "hamming")  # las que acepta espectro()
+
+
 def _ventana(nombre, N):
     """Ventana de N muestras (misma definicion que np.hanning y np.hamming)."""
     if nombre not in _VENTANAS:
         raise ValueError(f"ventana debe ser una de {_VENTANAS}, no {nombre!r}")
-    if nombre == "rect" or N == 1:
-        return np.ones(N)
-    n = np.arange(N)
-    coseno = np.cos(2 * np.pi * n / (N - 1))
-    if nombre == "hann":
-        return 0.5 - 0.5 * coseno
-    return 0.54 - 0.46 * coseno
+    return crear_ventana(nombre, N)
