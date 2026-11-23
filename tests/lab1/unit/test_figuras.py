@@ -56,4 +56,4 @@ def test_guardar_tabla_escribe_csv_en_tablas(tmp_path):
 
 def test_descubrir_encuentra_las_figuras_reales():
     figuras.descubrir()
-    assert "ejemplo" in figuras.REGISTRO
+    assert "muestreo_alias" in figuras.REGISTRO

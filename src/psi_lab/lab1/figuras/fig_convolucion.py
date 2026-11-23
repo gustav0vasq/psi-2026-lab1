@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 
 from psi_lab.lab1.convolucion import convolucion_directa, convolucion_fft
 from psi_lab.lab1.dft import dft, idft
-from psi_lab.lab1.figuras import figura
+from psi_lab.lab1.figuras import figura, guardar_tabla
 
 
 @figura("convolucion_circular")
@@ -20,7 +20,7 @@ def _(salida):
 
     lineal = convolucion_fft(x, h)
 
-    # sin relleno, yodo queda de largo len(x), h se completa solo hasta ahi
+    # sin relleno, y queda de largo len(x), h se completa solo hasta ahi
     h_rell = np.concatenate([h, np.zeros(len(x) - len(h))])
     circular = idft(dft(x) * dft(h_rell)).real
 
@@ -60,10 +60,17 @@ def _(salida):
         t_dir.append(mejor_dir)
         t_fft.append(mejor_fft)
 
+    guardar_tabla(
+        salida,
+        "convolucion_tiempos",
+        ["largo_h", "t_directa_s", "t_fft_s", "conviene_fft"],
+        [[m, d, f, "si" if f < d else "no"] for m, d, f in zip(largos, t_dir, t_fft)],
+    )
+
     fig = Figure(figsize=(6, 4))
     ax = fig.subplots()
     ax.loglog(largos, t_dir, "o-", label="directa")
-    ax.loglog(largos, t_fft, "s-", label="por DFT")
+    ax.loglog(largos, t_fft, "s-", label="por FFT")
     ax.set(
         xlabel="largo de h", ylabel="tiempo [s]", title=f"Tiempo de convolucion, len(x) = {len(x)}"
     )

@@ -14,5 +14,4 @@ COPY tests/ tests/
 CMD ["pytest", "-v"]
 
 FROM base AS runtime
-ENTRYPOINT ["psi-lab1"]
-CMD ["--salida", "/out"]
+ENTRYPOINT ["psi-lab1", "--salida", "/out"]

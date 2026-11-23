@@ -14,26 +14,8 @@ rechazabanda exigen n_coef impar: con n_coef par la respuesta vale 0 en fs/2 por
 
 import numpy as np
 
-VENTANAS = ("rect", "hann", "hamming", "blackman")
-
-
-def crear_ventana(nombre, n_coef):
-    """Ventana simetrica de n_coef muestras: 'rect', 'hann', 'hamming' o 'blackman'."""
-    if n_coef < 1:
-        raise ValueError("n_coef debe ser >= 1")
-    if n_coef == 1:
-        return np.ones(1)
-    n = np.arange(n_coef)
-    a = 2 * np.pi * n / (n_coef - 1)
-    if nombre == "rect":
-        return np.ones(n_coef)
-    if nombre == "hann":
-        return 0.5 - 0.5 * np.cos(a)
-    if nombre == "hamming":
-        return 0.54 - 0.46 * np.cos(a)
-    if nombre == "blackman":
-        return 0.42 - 0.5 * np.cos(a) + 0.08 * np.cos(2 * a)
-    raise ValueError(f"ventana desconocida: {nombre!r}; opciones: {VENTANAS}")
+from psi_lab.lab1.convolucion import convolucion_fft
+from psi_lab.lab1.ventanas import VENTANAS, crear_ventana  # noqa: F401 (se reexportan)
 
 
 def _validar_corte(f, fs):
@@ -97,13 +79,13 @@ def respuesta_frecuencia(h, fs, n=4096):
 def filtrar(x, h):
     """Aplica h a x (largo igual a x), compensando el retardo (n_coef - 1) / 2.
 
-    Convolucion lineal completa y recorte de la parte central, asi una componente en la banda
+    Convolucion lineal completa (convolucion_fft) y recorte de la parte central, asi una componente en la banda
     de paso sale alineada con la entrada (sin desfase). Para n_coef par el retardo se redondea
     hacia abajo. Los extremos (n_coef // 2 muestras) sufren el transitorio del relleno con ceros.
     """
     x = np.asarray(x, dtype=float)
     h = np.asarray(h, dtype=float)
-    y = np.convolve(x, h)  # convolucion lineal de NumPy (no es FFT)
+    y = convolucion_fft(x, h)
     retardo = (h.size - 1) // 2
     return y[retardo : retardo + x.size]
 

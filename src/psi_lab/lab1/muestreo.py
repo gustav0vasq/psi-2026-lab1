@@ -2,7 +2,6 @@
 
 import numpy as np
 
-# Por implementar:
 
 def muestrear(fun, fs, duracion):
     """Evalua fun(t) en t = n / fs, n = 0..N-1. Retorna (t, x)."""

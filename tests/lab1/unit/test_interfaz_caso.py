@@ -15,6 +15,7 @@ INTERFAZ = {
         "notch_ideal": ["forma", "picos", "radio"],
         "notch_gaussiano": ["forma", "picos", "sigma"],
         "aplicar_mascara": ["img", "H"],
+        "pasabajos_gaussiano": ["img", "sigma"],
     },
     "metricas": {"psnr": ["a", "b", "rango"]},
     "aliasing": {
