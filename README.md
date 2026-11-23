@@ -41,6 +41,9 @@ El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
 | `psi_lab.lab1.filtros` | `filtrar(x, h)` | x: 1D; h: 1D | `y` 1D del largo de x, sin retardo (compensa `(n_coef - 1) // 2` muestras) |
 | `psi_lab.lab1.filtros` | `crear_ventana(nombre, n_coef)` | nombre: `"rect"`, `"hann"`, `"hamming"`, `"blackman"` | ventana simétrica 1D de largo n_coef |
 | `psi_lab.lab1.filtros` | `medir_pasabajos(h, fs, fc, n=32768)` | h: pasabajos; fs, fc [Hz] | `(ancho_transicion [Hz], atenuacion [dB])`, medidos entre `1 - delta` y `delta` |
+| `psi_lab.lab1.convolucion` | `convolucion_directa(x, h)` | x, h: 1D (listas o arreglos) | `y` 1D de largo `len(x) + len(h) - 1`, convolución lineal por definición (dos ciclos) |
+| `psi_lab.lab1.convolucion` | `convolucion_fft(x, h)` | igual que la directa | mismo `y`, con `idft(dft(x) * dft(h))` rellenando con ceros hasta `len(x) + len(h) - 1` (sin relleno sale la circular) |
+| `psi_lab.lab1.convolucion` | `convolucion_separable_2d(img, h_filas, h_cols)` | img: 2D `(alto, ancho)`; h_filas, h_cols: 1D | 2D de `(alto + len(h_cols) - 1, ancho + len(h_filas) - 1)`: h_filas por cada fila y h_cols por cada columna, igual que convolucionar con `np.outer(h_cols, h_filas)` |
 | `psi_lab.lab1.caso_imagen` | `dft2(img)` | img: float64 `(alto, ancho)` | `E` complejo `(alto, ancho)`, sin shift, DC en `E[0, 0]` |
 | `psi_lab.lab1.caso_imagen` | `idft2(E)` | E: complejo `(alto, ancho)` sin shift | complejo `(alto, ancho)`; la imagen es `.real` |
 | `psi_lab.lab1.caso_imagen` | `espectro_log(E)` | E: complejo sin shift | float `(alto, ancho)`, `log(1 + \|E\|)` **ya centrada** (DC en `(alto//2, ancho//2)`); solo para graficar |
@@ -50,6 +53,9 @@ El CI usa solo señales sintéticas (`psi-lab1 --sintetico`).
 | `psi_lab.lab1.caso_imagen` | `aplicar_mascara(img, H)` | img: 2D float; H: misma forma, sin shift | complejo `idft2(dft2(img) * H)`; la imagen es `.real` (imag ~0 si H tiene pares completos) |
 | `psi_lab.lab1.caso_imagen` | `psnr(a, b, rango=1.0)` | a, b: misma forma; rango: valor máximo (1.0 en [0, 1]) | PSNR [dB] `= 10 log10(rango^2 / MSE)`; `inf` si son idénticas |
 | `psi_lab.lab1.caso_imagen.notch` | `pasabajos_gaussiano(img, sigma)` | img: 2D float; sigma [px] > 0 | imagen 2D de la misma forma: convolución separable con un núcleo gaussiano normalizado (largo `2 ceil(3 sigma) + 1`), bordes por reflejo; ganancia 1 en DC |
+| `psi_lab.lab1.caso_imagen` | `zone_plate(M)` | M: lado en px (entero) | float `(M, M)` en [0, 1], `(1 + cos(pi (x^2 + y^2) / M)) / 2` con x, y centradas; frecuencia local `r / M` ciclos/px, llega a 0.5 en el borde |
+| `psi_lab.lab1.caso_imagen` | `reducir(img, k)` | img: 2D; k: entero >= 1 | `img[::k, ::k]` (1 de cada k px), **sin** filtrar antes |
+| `psi_lab.lab1.caso_imagen` | `pasabajos_separable_2d(img, fc, n_coef)` | img: 2D float; fc [ciclos/px] en (0, 0.5); n_coef: entero | imagen 2D de la misma forma: `fir_pasabajos(fc, 1, n_coef)` por filas y columnas, recortada al centro; ganancia 1 en DC, bordes oscurecidos ~n_coef/2 px por el relleno con ceros |
 | ... | ... | ... | ... |
 
 ## Figuras y tablas del informe
