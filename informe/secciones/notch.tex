@@ -10,4 +10,66 @@
 \section{Caso C: notch, métricas y caso real}
 \label{sec:notch}
 
-\textit{(Por escribir.)}
+\subsection{Notch y métricas}
+\label{sec:notch-metricas}
+
+\textit{(Por escribir, R3.)}
+
+\subsection{Caso real}
+\label{sec:caso-real}
+
+Aplicamos la detección y el notch gaussiano a dos fotos con un patrón periódico real, donde no
+existe una versión limpia. La primera es una foto de un diario de la Primera Guerra Mundial
+impresa con trama de puntos (el original ya no existe, solo queda la impresión)
+y la segunda es una foto que tomamos con el celular a la pantalla de un computador, donde queda
+registrada la rejilla de píxeles del monitor. Las recortamos para dejar solo la zona con el patrón, sin
+texto ni marcos, que también forman patrones.
+
+Como no hay imagen de referencia, no se puede calcular PSNR ni SSIM. En su lugar medimos tres
+cosas: qué fracción del espectro borra la máscara, cuánto baja la energía en las zonas del notch, y si la imagen diferencia (original menos
+filtrada) tiene algo del contenido. Para esto último calculamos su correlación con las bajas
+frecuencias de la imagen ($|f|\le 0{,}05$ ciclos/píxel). Si el filtro solo sacó el patrón, esa
+correlación debería ser cero.
+
+\figura{caso_real_diario.png}{0.8}{Foto de diario con trama de puntos: original, filtrada con
+  notch gaussiano ($\sigma=4$ bins), diferencia y espectro con los bins detectados. Abajo, zoom
+  del recuadro rojo.}{fig:caso-real-diario}
+
+\figura{caso_real_pantalla.png}{0.8}{Foto de la pantalla de un computador: original, filtrada
+  con notch gaussiano ($\sigma=2$ bins), diferencia y espectro. En el zoom de la diferencia se ve
+  la rejilla de píxeles del monitor que el filtro quitó.}{fig:caso-real-pantalla}
+
+En la foto del diario (Figura~\ref{fig:caso-real-diario}) la trama aparece en el espectro como una
+grilla de puntos aislados: la frecuencia fundamental y sus armónicos. Con \texttt{umbral} $=0{,}1$
+se detectan 4 pares de manchas, y el notch borra solo el 0{,}39\,\% del espectro: los puntos de
+impresión desaparecen y la cara queda en gris continuo. La diferencia es solo la trama, con
+correlación $0{,}000$ con el contenido. En la foto de la pantalla (Figura~\ref{fig:caso-real-pantalla}) pasa algo parecido: el notch
+borra el 0{,}04\,\% del espectro y la diferencia es una rejilla de rayas cada 2 píxeles, también
+sin correlación con el contenido (Tabla~\ref{tab:caso-real}). En las dos fotos la energía en las
+zonas del notch baja unos 25~dB.
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{lcccccc}
+    \toprule
+    Foto & umbral & $r_{\text{DC}}$ & $\sigma$ & espectro borrado & reducción en picos &
+      corr.\ diferencia--contenido \\
+    \midrule
+    Diario   & 0{,}1 & 20  & 4 & 0{,}39\,\% & 24{,}3~dB & $0{,}000$ \\
+    Pantalla & 0{,}3 & 100 & 2 & 0{,}04\,\% & 25{,}6~dB & $0{,}000$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{Evaluación sin referencia del caso real (tabla \texttt{caso\_real.csv}).}
+  \label{tab:caso-real}
+\end{table}
+
+El método tiene límites que se notan en el caso real. En el diario, la trama no es un coseno
+sumado: el tamaño de cada punto depende de qué tan oscura es esa zona, así que el patrón está
+modulado por la imagen, y por eso en la diferencia se insinúa la silueta de la cara. También
+quedan armónicos más lejanos y débiles que dejan un grano fino; bajar el umbral los alcanza, pero
+borra más espectro. En la foto de la pantalla queda una textura tipo laberinto que viene del
+procesamiento de la cámara del celular. Como no es periódica, no forma picos aislados y el notch
+no la puede quitar, ni debería. Por último, la imagen que se mostró en el monitor existe, pero no
+sirve como referencia: la foto cambia escala, perspectiva y color, y no se puede comparar píxel a
+píxel.
