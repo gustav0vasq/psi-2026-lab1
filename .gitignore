@@ -12,3 +12,11 @@ out/
 data/
 *.pdf
 !informe/lab1.pdf
+# LaTeX (informe/): archivos auxiliares de compilacion
+*.aux
+*.log
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+informe/*.out
