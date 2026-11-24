@@ -1,14 +1,71 @@
 % Seccion: Caso C: Fourier 2D y ruido periódico
 % Responsable: R1 (DFT 2D, fase) y R2 (ruido periódico, detección). Extension: 1,5 pagina(s).
 % Solo R1 (DFT 2D, fase) y R2 (ruido periódico, detección) edita este archivo.
-%
-% Que debe contener (segun el enunciado y la pauta):
-%   - R1: DFT 2D separable, espectro y experimento de intercambio de fases.
-%   - R2: modelo coseno 2D y por qué los picos caen en (kv, ku) y su conjugado.
-%   - R2: detección automática (exclusión del DC, umbral relativo, conjugados) y justificación de radio_dc y umbral con ruido_sensibilidad.csv.
-%   - R2: figura ruido_deteccion.png.
+% R1 escribe la subseccion "DFT 2D y fase"; R2 escribe "Ruido periódico y detección de picos".
 
 \section{Caso C: Fourier 2D y ruido periódico}
 \label{sec:fourier2d}
 
-\textit{(Por escribir.)}
+\subsection{DFT 2D y fase}
+\label{sec:dft2}
+
+\textit{(Por escribir, R1.)}
+
+\subsection{Ruido periódico y detección de picos}
+\label{sec:ruido}
+
+Modelamos la interferencia periódica como un coseno 2D sumado a la imagen,
+\begin{equation}
+  r(x,y) = A\cos\!\left(2\pi\left(\frac{k_u\,x}{M} + \frac{k_v\,y}{N}\right)\right),
+  \label{eq:coseno2d}
+\end{equation}
+con $x$ la columna, $y$ la fila e imagen de $N\times M$ píxeles. Elegimos $k_u$ y $k_v$ enteros,
+es decir, un número exacto de ciclos en toda la imagen. Así la frecuencia cae justo en un bin de
+la DFT 2D y aparecen exactamente dos picos, en $(k_v, k_u)$ y en su conjugado
+$(N-k_v,\,M-k_u)$, cada uno de altura $A\,NM/2$. Si los ciclos no fueran enteros habría fuga, como en la
+Sección~\ref{sec:dft}. Una prueba unitaria verifica que el coseno 2D da exactamente esos dos
+picos.
+
+Para encontrar los picos de forma automática (\texttt{detectar\_picos}), tomamos $|E|$, ponemos en
+cero un disco de radio $r_{\text{DC}}$ alrededor del DC, nos quedamos con los bins que superan una
+fracción \texttt{umbral} del máximo que queda, y agregamos siempre el conjugado de cada pico.
+Esto último es necesario: si el notch borrara solo un pico del par, la imagen filtrada dejaría
+de ser real.
+
+El disco alrededor del DC es lo que hace funcionar esta versión simple. Una imagen natural tiene
+casi toda su energía en frecuencias bajas, y sin el disco esos bins le ganan a cualquier
+interferencia débil. Para elegir $r_{\text{DC}}$ probamos con la imagen \texttt{camera} y dos
+interferencias de amplitud decreciente (Tabla~\ref{tab:sensibilidad}). Con $r_{\text{DC}}=10$
+el detector encuentra los 4 picos sin ningún falso hasta una amplitud de 0{,}05; con
+$r_{\text{DC}}=4$ ya aparecen falsos con 0{,}1. Bajo 0{,}02 ninguno de los dos funciona bien, y
+ese es el límite del método. El costo es no detectar patrones de menos de 10 ciclos en la imagen,
+que de todas formas se confunden con el contenido. Usamos \texttt{umbral} $=0{,}3$.
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{ccccc}
+    \toprule
+    Amplitud & \multicolumn{2}{c}{$r_{\text{DC}}=4$} & \multicolumn{2}{c}{$r_{\text{DC}}=10$} \\
+             & aciertos & falsos & aciertos & falsos \\
+    \midrule
+    0{,}2  & 4/4 & 0   & 4/4 & 0   \\
+    0{,}1  & 4/4 & 4   & 4/4 & 0   \\
+    0{,}05 & 4/4 & 50  & 4/4 & 0   \\
+    0{,}02 & 4/4 & 106 & 4/4 & 140 \\
+    0{,}01 & 0/4 & 106 & 4/4 & 634 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Picos detectados según la amplitud de la interferencia y el radio excluido alrededor
+    del DC (\texttt{umbral} $=0{,}3$; tabla \texttt{ruido\_sensibilidad.csv}).}
+  \label{tab:sensibilidad}
+\end{table}
+
+\figura{ruido_deteccion.png}{0.75}{Imagen \texttt{camera} limpia, con dos interferencias y su
+  espectro centrado. Los círculos rojos son los 4 picos detectados (dos pares conjugados).}%
+  {fig:ruido-deteccion}
+
+En el espectro (Figura~\ref{fig:ruido-deteccion}) la interferencia aparece como puntos aislados,
+mientras que el contenido se reparte en la mancha central y en líneas, que vienen de los bordes
+rectos de la foto y de la cruz que forman los bordes de la imagen (la fuga de la ventana
+rectangular, ahora en 2D). Por eso se puede borrar la interferencia sin tocar el resto.
