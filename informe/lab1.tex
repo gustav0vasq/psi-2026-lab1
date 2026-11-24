@@ -1,0 +1,51 @@
+% Informe del Laboratorio 1 (PSI 2-2026). Maximo 10 paginas en total.
+%
+% Cada seccion vive en su propio archivo en secciones/ y la escribe SOLO su responsable
+% (ver el comentario al inicio de cada archivo). Asi dos personas nunca editan el mismo archivo
+% y no hay conflictos de git. Este archivo principal no se toca para escribir una seccion.
+%
+% Las figuras NO se copian aqui: se toman de ../out/, que genera `psi-lab1`.
+% Para compilar (desde la raiz del repositorio):
+%     psi-lab1                              # genera out/ con todas las figuras y tablas
+%     cd informe && latexmk -pdf lab1.tex   # genera informe/lab1.pdf
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-noshorthands]{babel}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{../out/}}  % figuras generadas por psi-lab1
+
+% \figura{archivo.png}{ancho como fraccion de \linewidth}{leyenda}{etiqueta}
+\newcommand{\figura}[4]{%
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=#2\linewidth]{#1}
+    \caption{#3}
+    \label{#4}
+  \end{figure}}
+
+\title{Laboratorio 1: del muestreo al filtrado\\
+       \large Procesamiento de Señales e Imágenes 2-2026 --- Caso C: imágenes}
+\author{Integrante R1 \and Integrante R2 \and Integrante R3 \and Integrante R4}
+\date{26 de noviembre de 2026}
+
+\begin{document}
+\maketitle
+
+\input{secciones/introduccion}   % R1  (0,5 pag.)
+\input{secciones/muestreo}       % R1  (1,0 pag.)
+\input{secciones/dft}            % R2  (1,5 pag.)
+\input{secciones/convolucion}    % R4  (1,0 pag.)
+\input{secciones/filtros}        % R3  (1,5 pag.)
+\input{secciones/fourier2d}      % R1 + R2 (1,5 pag.)
+\input{secciones/notch}          % R3  (1,5 pag.)
+\input{secciones/aliasing}       % R4  (1,0 pag.)
+\input{secciones/conclusiones}   % R4  (0,5 pag.)
+
+\end{document}
