@@ -10,4 +10,28 @@
 \section{Objetivo e introducción}
 \label{sec:introduccion}
 
-\textit{(Por escribir.)}
+El laboratorio tiene dos objetivos. El primero es implementar desde cero, usando solo NumPy, las
+herramientas de las Unidades 1--2 (muestreo, DFT, convolución y filtros FIR por ventana) y validarlas con
+señales sintéticas cuyo resultado se conoce de antemano por la teoría. El segundo, el caso C, es usarlas
+para estudiar Fourier en 2D: la DFT 2D y el papel de su magnitud y su fase, la eliminación de interferencia
+periódica con filtros notch (con PSNR y SSIM contra la imagen original, y sobre fotos reales sin referencia)
+y el aliasing espacial al reducir una imagen sin filtrarla antes.
+
+\paragraph{Organización y reproducción.}
+El paquete \texttt{psi\_lab.lab1} tiene un módulo por herramienta (\texttt{muestreo}, \texttt{dft},
+\texttt{convolucion}, \texttt{filtros}, \texttt{ventanas}, \texttt{sinteticos}), un subpaquete
+\texttt{caso\_imagen} para el caso C y un archivo por figura en \texttt{figuras/}. Cada figura y tabla de
+este informe sale del código: \texttt{docker compose run --rm lab1} regenera todas en \texttt{out/}, y
+descarga las dos fotos reales del caso C desde un \emph{release} del repositorio (no se versionan datos).
+\texttt{docker compose run --rm tests} corre las pruebas unitarias (propiedades teóricas, no valores
+copiados) y de integración; el CI ejecuta además el análisis estático y las pruebas en Python 3.11 a 3.13.
+
+\paragraph{Funciones de bibliotecas usadas.}
+En la parte común solo se usa NumPy para el cálculo; \texttt{np.fft}, \texttt{np.convolve} y
+\texttt{scipy.signal} aparecen únicamente dentro de las pruebas, como referencia, y \texttt{np.fft.fft} en la
+comparación de tiempos de la DFT. En el caso C se usan, como auxiliares: \texttt{np.fft} (\texttt{fft},
+\texttt{ifft}, \texttt{fftshift}, \texttt{fftfreq}) para la DFT 2D y para mostrar espectros;
+\texttt{skimage.data} (imágenes \texttt{camera} y \texttt{astronaut}), \texttt{skimage.color.rgb2gray},
+\texttt{skimage.io.imread} (lectura de las fotos) y \texttt{skimage.metrics.structural\_similarity} (SSIM).
+\texttt{scipy.ndimage} y \texttt{scipy.signal} se usan solo en pruebas. La detección de picos, los filtros
+notch, el PSNR y el pasabajos gaussiano son implementaciones propias.
