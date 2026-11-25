@@ -1,15 +1,92 @@
 % Seccion: DFT, resolución y fuga espectral
 % Responsable: R2. Extension: 1,5 pagina(s).
 % Solo R2 edita este archivo.
-%
-% Que debe contener (segun el enunciado y la pauta):
-%   - Ecuaciones de la DFT y de la normalización del espectro de un lado.
-%   - 2.2 Tiempos (dft_tiempos.png): pendientes en log-log vs. O(N^2) y O(N log N).
-%   - 2.3 Resolución (dft_resolucion.png): desde qué T se separan 50 y 52 Hz; Delta f = 1/T.
-%   - 2.4 Relleno con ceros (dft_relleno.png): mejora la apariencia, no la resolución.
-%   - 2.5 Fuga (dft_fuga.png, dft_fuga.csv): rectangular vs. Hann en dB con un tono de -60 dB.
 
 \section{DFT, resolución y fuga espectral}
 \label{sec:dft}
 
-\textit{(Por escribir.)}
+\paragraph{Métodos.}
+Implementamos la DFT y su inversa directamente desde la definición (\texttt{dft.py}):
+\begin{equation}
+  X[k] = \sum_{n=0}^{N-1} x[n]\, e^{-j2\pi kn/N},
+  \qquad
+  x[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k]\, e^{\,j2\pi kn/N}.
+  \label{eq:dft}
+\end{equation}
+En el código esto es multiplicar la matriz $W_{kn}=e^{-j2\pi kn/N}$ por el vector $x$, lo que da
+$O(N^2)$ operaciones. La matriz se calcula por bloques de filas, porque para $N=4096$ completa
+ocuparía unos 256~MB. Para el espectro de un lado, la señal se multiplica por una ventana $w$
+(rectangular, Hann o Hamming), se rellena con ceros hasta $N_{\text{fft}}$ y se normaliza como
+\begin{equation}
+  A[k] = \frac{2\,|X_w[k]|}{\sum_n w[n]}, \qquad f_k = \frac{k\,f_s}{N_{\text{fft}}},
+  \quad k = 0,\dots,\lfloor N_{\text{fft}}/2\rfloor .
+  \label{eq:espectro}
+\end{equation}
+El 2 junta la mitad de energía que queda en las frecuencias negativas (no se aplica en DC ni en
+Nyquist), y dividir por $\sum w$ quita el efecto de la ventana. Con esto, un tono
+$A\cos(2\pi f t)$ que cae en un bin da un pico de altura $A$. Los bins quedan separados por
+$\Delta f = f_s/N = 1/T$. En las pruebas comparamos con \texttt{np.fft.fft} y revisamos que
+$\mathrm{idft}(\mathrm{dft}(x))=x$, la simetría hermítica, Parseval y la altura del pico.
+
+\paragraph{Tiempo de cálculo.}
+Medimos \texttt{dft} y \texttt{np.fft.fft} para $N=2^4$ hasta $2^{12}$, quedándonos con el mejor
+tiempo de varias repeticiones (Figura~\ref{fig:dft-tiempos}, izquierda). Si $t\propto N^p$, en
+escala log-log se ve una recta de pendiente $p$. La ajustamos solo con $N\ge 256$, porque con $N$
+chico el tiempo lo domina el costo fijo de llamar a la función y no el algoritmo. Para
+\texttt{dft} la pendiente sale cerca de 2, como se espera de $O(N^2)$. Sale un poco mayor que 2
+porque desde $N=2048$ los bloques de $W$ ya no caben en la caché del procesador. Para la FFT la
+pendiente queda cerca de 1, lo que calza con $O(N\log N)$, ya que $\log N$ cambia poco en este
+rango. Con $N=4096$ nuestra \texttt{dft} es del orden de $10^4$ veces más lenta.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.45\linewidth]{dft_tiempos.png}\hfill
+  \includegraphics[width=0.53\linewidth]{dft_fuga.png}
+  \caption{Izquierda: tiempos de \texttt{dft} y \texttt{np.fft.fft} en log-log (la zona gris no
+    entra en el ajuste). Derecha: tono de 50~Hz con $A=1$ y de 80~Hz con $A=10^{-3}$ ($-60$~dB),
+    $N=1024$, con ventana rectangular y Hann.}
+  \label{fig:dft-tiempos}
+\end{figure}
+
+\paragraph{Resolución y relleno con ceros.}
+Usamos dos tonos de 50 y 52~Hz con $f_s=1000$~Hz y ventana rectangular
+(Figura~\ref{fig:dft-resolucion}). Con $T=0{,}25$~s los bins quedan cada 4~Hz y se ve una sola
+joroba en 51~Hz. Desde $T=0{,}5$~s, cuando $\Delta f$ llega a 2~Hz, aparecen dos picos con un
+valle entre ellos. O sea, para separar dos tonos que están a $\delta$~Hz hay que medir por lo
+menos $T = 1/\delta$ segundos.
+
+Después repetimos el caso de $T=0{,}25$~s con $N_{\text{fft}}=8N$
+(Figura~\ref{fig:dft-relleno}). Los bins pasan a estar cada 0{,}5~Hz y la curva se ve más suave,
+pero sigue habiendo un solo lóbulo. Los ceros no agregan información de la señal, solo interpolan
+la misma curva: de hecho, tomando uno de cada 8 bins del espectro rellenado se recuperan
+exactamente los originales (una de las pruebas revisa esto). El relleno mejora cómo se ve el
+espectro y ayuda a ubicar mejor el máximo, pero la resolución depende solo de $T$. Con $T=1$~s
+los tonos se separan sin rellenar nada.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.62\linewidth]{dft_resolucion.png}
+  \caption{Tonos de 50 y 52~Hz para $T$ de 0{,}25 a 2~s. Los puntos son los bins de la DFT (cada
+    $1/T$~Hz) y la línea es la forma del espectro con relleno a 8192 puntos.}
+  \label{fig:dft-resolucion}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.62\linewidth]{dft_relleno.png}
+  \caption{Izquierda: $T=0{,}25$~s con $N_{\text{fft}}=N$ y con $8N$, siempre un solo lóbulo.
+    Derecha: $T=1$~s sin relleno, donde los tonos sí se separan.}
+  \label{fig:dft-relleno}
+\end{figure}
+
+\paragraph{Fuga espectral.}
+Elegimos $N=1024$ a propósito, para que 50 y 80~Hz no caigan justo en un bin (quedan cada
+0{,}977~Hz). Eso es lo que pasa normalmente con una señal real. Si usáramos $N=1000$, los dos
+tonos caerían en un bin y con la ventana rectangular no se vería fuga. Con la rectangular
+(Figura~\ref{fig:dft-tiempos}, derecha), la fuga del tono fuerte baja muy lento y cerca de 80~Hz
+todavía está en $-41{,}7$~dB, más arriba que el tono débil de $-60$~dB, así que este no se
+alcanza a ver. La ventana de Hann lleva la señal a cero de forma suave en los bordes, y sus
+lóbulos laterales caen mucho más rápido: cerca de 80~Hz la fuga queda en $-92{,}9$~dB y el tono
+débil aparece con su altura real, $-60{,}0$~dB. A cambio, el lóbulo principal de Hann es el doble
+de ancho, así que se pierde resolución. Por eso conviene la rectangular para separar tonos
+cercanos y Hann para ver tonos débiles al lado de uno fuerte.
