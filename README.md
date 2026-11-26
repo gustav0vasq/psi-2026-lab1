@@ -68,6 +68,79 @@ El caso real (C4, `fig_caso_real.py`) usa dos fotos con patrón periódico real 
 | `psi_lab.lab1.datos` | `descargar_fotos(destino=DIR_DATOS)` | destino: carpeta (Path), por defecto `data/` o `PSI_DATOS` | `Path` de `destino/caso_real` con las fotos del GitHub Release (`URL_FOTOS`); idempotente; `RuntimeError` con mensaje claro si falla la descarga, el ZIP es inválido o faltan fotos |
 | ... | ... | ... | ... |
 
+## Filtros FIR y notch 2D (R3)
+
+Dos partes del laboratorio: los filtros FIR por ventana (Tarea 4, parte común) y los filtros notch
+2D con sus métricas (C3, caso aplicado). El notch es el rechazabanda de la Tarea 4 llevado a dos
+dimensiones. La interfaz con firmas y unidades está en la tabla de arriba.
+
+### Filtros FIR por ventana (`filtros.py`, `ventanas.py`)
+Solo NumPy: ni `np.fft` ni `scipy.signal`.
+
+- **Pasabajos** (`fir_pasabajos`): sinc ideal truncada a `n_coef` coeficientes, multiplicada por una
+  ventana (`"rect"`, `"hann"`, `"hamming"` o `"blackman"`, de `ventanas.crear_ventana`) y
+  normalizada a `sum(h) = 1` (ganancia 1 en DC).
+- **Los otros tres se derivan del pasabajos**, sin diseñar nada nuevo:
+  - pasaaltos = `delta - pasabajos` (inversión espectral);
+  - pasabanda = `pasabajos(f2) - pasabajos(f1)`;
+  - rechazabanda = `delta - pasabanda`.
+  
+  `delta` es un impulso en el centro `M = (n_coef - 1) / 2`. Por eso **pasaaltos y rechazabanda exigen
+  `n_coef` impar** (con `n_coef` par `M` no es entero y falla con `ValueError`).
+- **Fase lineal**: los coeficientes son simétricos y el retardo es `M` muestras.
+- **`respuesta_frecuencia`** evalúa `H(f) = sum_k h[k] exp(-2j pi f k / fs)` por definición (producto
+  matricial), en `n` frecuencias de `[0, fs/2)`.
+- **`filtrar(x, h)`** usa `convolucion_fft` del grupo (`convolucion.py`, no `np.convolve`) y recorta la
+  parte central para compensar el retardo: la banda de paso sale alineada con la entrada. Los
+  primeros y últimos `n_coef // 2` valores tienen el transitorio del relleno con ceros.
+- **`medir_pasabajos(h, fs, fc)`** retorna `(ancho_transicion, atenuacion)`: la atenuación es
+  `-20 log10(delta)`, con `delta` el máximo de `|H|` después del primer mínimo sobre `fc`; el ancho
+  es la distancia entre `|H| = 1 - delta` y `|H| = delta`.
+
+### Notch 2D y métricas (`caso_imagen/notch.py`, `caso_imagen/metricas.py`)
+Todas las máscaras trabajan sobre el espectro **sin `fftshift`** y se aplican como `E * H`.
+
+- **`notch_ideal(forma, picos, radio)`**: unos con ceros a distancia `<= radio` de cada pico.
+- **`notch_gaussiano(forma, picos, sigma)`**: `H = prod_i (1 - exp(-d_i^2 / 2 sigma^2))`. Se usa el
+  producto (no `1 - suma`) para que `H` nunca sea negativa y valga 0 exacto en cada pico.
+- **Distancia periódica**: `d_i` se mide por el camino corto, porque el espectro es periódico; así el
+  pico conjugado cerca del borde no queda con la máscara cortada.
+- **`picos` debe traer los dos picos de cada par conjugado** (lo entrega `detectar_picos`). Si se borra
+  solo uno, `aplicar_mascara` devuelve una imagen compleja. El DC `[0, 0]` no se toca.
+- **`aplicar_mascara(img, H)`** = `idft2(dft2(img) * H)`; la imagen filtrada es `.real`.
+- **`pasabajos_gaussiano(img, sigma)`**: línea base para comparar. Convolución separable con un núcleo
+  gaussiano normalizado, con `convolucion_separable_2d` del grupo y bordes por reflejo.
+- **`psnr(a, b, rango=1.0)`**: implementación propia, `10 log10(rango^2 / MSE)`. SSIM se importa de
+  `skimage.metrics.structural_similarity` (auxiliar de biblioteca declarado).
+
+### Qué usa de los demás
+`filtrar` depende de `convolucion_fft` (convolución) y el notch de `dft2`/`idft2` (Fourier 2D),
+`detectar_picos` (ruido periódico) y `convolucion_separable_2d` (convolución). Auxiliares de biblioteca:
+`skimage.data.camera` y `structural_similarity` en las figuras; `scipy` y `np.fft` solo dentro de `tests/`.
+
+### Pruebas
+`tests/lab1/unit/test_filtros.py` y `tests/lab1/unit/test_caso_notch.py` verifican propiedades teóricas:
+ganancia ~1 en la banda de paso y menos de -40 dB en el rechazo (Hamming), simetría de los coeficientes,
+que `filtrar` no desplaza un pulso, que `respuesta_frecuencia` coincide con la FFT rellenada, que la
+máscara vale 0 en cada pico y 1 en el DC, que un par conjugado completo da `imag ~ 0` y uno solo no,
+y que el notch recupera la imagen con interferencia sintética.
+
+```bash
+pytest tests/lab1/unit/test_filtros.py tests/lab1/unit/test_caso_notch.py -v
+```
+
+### Figuras y tablas
+Salen de `figuras/fig_filtros.py` y `figuras/fig_notch.py` con `psi-lab1` (o `docker compose run --rm lab1`):
+
+| Archivo en `out/` | Contenido |
+|---|---|
+| `filtros_tipos.png`, `filtros_ventanas.png` | Los cuatro filtros y las cuatro ventanas |
+| `filtros_n_coef.png`, `tablas/filtros_transicion_atenuacion.csv` | Ancho de transición y atenuación según `n_coef` y ventana |
+| `filtros_chirp.png` | Chirp de 0 a 500 Hz filtrado por el pasabajos |
+| `notch_comparacion.png` | Notch ideal, gaussiano y pasabajos espacial |
+| `notch_parametros.png`, `tablas/notch_psnr_ssim.csv` | PSNR y SSIM según radio, sigma y número de interferencias |
+| `notch_fuga.png`, `tablas/notch_fuga.csv` | Efecto de la fuga espectral sobre el radio óptimo |
+
 ## Figuras y tablas del informe
 Cada figura vive en su propio archivo `src/psi_lab/lab1/figuras/fig_<tema>.py`, de un solo dueño.
 `reproducir.py` no se modifica: descubre solo los archivos `fig_*.py` y ejecuta lo registrado,
