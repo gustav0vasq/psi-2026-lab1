@@ -13,9 +13,8 @@ Implementamos la DFT y su inversa directamente desde la definición (\texttt{dft
   x[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k]\, e^{\,j2\pi kn/N}.
   \label{eq:dft}
 \end{equation}
-En el código esto es multiplicar la matriz $W_{kn}=e^{-j2\pi kn/N}$ por el vector $x$, lo que da
-$O(N^2)$ operaciones. La matriz se calcula por bloques de filas, porque para $N=4096$ completa
-ocuparía unos 256~MB. Para el espectro de un lado, la señal se multiplica por una ventana $w$
+En el código es multiplicar la matriz $W_{kn}=e^{-j2\pi kn/N}$ por $x$ ($O(N^2)$), calculada por
+bloques de filas para no ocupar 256~MB con $N=4096$. Para el espectro de un lado, la señal se multiplica por una ventana $w$
 (rectangular, Hann o Hamming), se rellena con ceros hasta $N_{\text{fft}}$ y se normaliza como
 \begin{equation}
   A[k] = \frac{2\,|X_w[k]|}{\sum_n w[n]}, \qquad f_k = \frac{k\,f_s}{N_{\text{fft}}},
@@ -33,8 +32,7 @@ Medimos \texttt{dft} y \texttt{np.fft.fft} para $N=2^4$ hasta $2^{12}$, quedánd
 tiempo de varias repeticiones (Figura~\ref{fig:dft-tiempos}, izquierda). Si $t\propto N^p$, en
 escala log-log se ve una recta de pendiente $p$. La ajustamos solo con $N\ge 256$, porque con $N$
 chico el tiempo lo domina el costo fijo de llamar a la función y no el algoritmo. Para
-\texttt{dft} la pendiente sale cerca de 2, como se espera de $O(N^2)$. Sale un poco mayor que 2
-porque desde $N=2048$ los bloques de $W$ ya no caben en la caché del procesador. Para la FFT la
+\texttt{dft} la pendiente sale cerca de 2, como se espera de $O(N^2)$. Para la FFT la
 pendiente queda cerca de 1, lo que calza con $O(N\log N)$, ya que $\log N$ cambia poco en este
 rango. Con $N=4096$ nuestra \texttt{dft} es del orden de $10^4$ veces más lenta.
 
@@ -59,24 +57,22 @@ Después repetimos el caso de $T=0{,}25$~s con $N_{\text{fft}}=8N$
 (Figura~\ref{fig:dft-relleno}). Los bins pasan a estar cada 0{,}5~Hz y la curva se ve más suave,
 pero sigue habiendo un solo lóbulo. Los ceros no agregan información de la señal, solo interpolan
 la misma curva: de hecho, tomando uno de cada 8 bins del espectro rellenado se recuperan
-exactamente los originales (una de las pruebas revisa esto). El relleno mejora cómo se ve el
-espectro y ayuda a ubicar mejor el máximo, pero la resolución depende solo de $T$. Con $T=1$~s
-los tonos se separan sin rellenar nada.
+exactamente los originales (una de las pruebas revisa esto). La resolución depende solo de $T$.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.62\linewidth]{dft_resolucion.png}
-  \caption{Tonos de 50 y 52~Hz para $T$ de 0{,}25 a 2~s. Los puntos son los bins de la DFT (cada
-    $1/T$~Hz) y la línea es la forma del espectro con relleno a 8192 puntos.}
-  \label{fig:dft-resolucion}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.62\linewidth]{dft_relleno.png}
-  \caption{Izquierda: $T=0{,}25$~s con $N_{\text{fft}}=N$ y con $8N$, siempre un solo lóbulo.
-    Derecha: $T=1$~s sin relleno, donde los tonos sí se separan.}
-  \label{fig:dft-relleno}
+  \begin{minipage}[b]{0.52\linewidth}\centering
+    \includegraphics[width=\linewidth]{dft_resolucion.png}
+    \caption{Tonos de 50 y 52~Hz para $T$ de 0{,}25 a 2~s. Puntos: bins de la DFT (cada
+      $1/T$~Hz); línea: forma con relleno a 8192 puntos.}
+    \label{fig:dft-resolucion}
+  \end{minipage}\hfill
+  \begin{minipage}[b]{0.45\linewidth}\centering
+    \includegraphics[width=\linewidth]{dft_relleno.png}
+    \caption{Izquierda: $T=0{,}25$~s con $N_{\text{fft}}=N$ y $8N$, un solo lóbulo. Derecha:
+      $T=1$~s sin relleno, los tonos se separan.}
+    \label{fig:dft-relleno}
+  \end{minipage}
 \end{figure}
 
 \paragraph{Fuga espectral.}

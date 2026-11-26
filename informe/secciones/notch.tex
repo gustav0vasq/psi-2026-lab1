@@ -107,19 +107,15 @@ fracción del espectro borra la máscara (mientras menos, más localizado es el 
 la energía en las zonas del notch, y revisamos la imagen diferencia (original menos filtrada), que
 debería mostrar solo el patrón.
 
-\figura{caso_real_diario.png}{0.8}{Foto de diario con trama de puntos: original, filtrada con
+\figura{caso_real_diario.png}{0.62}{Foto de diario con trama de puntos: original, filtrada con
   notch gaussiano ($\sigma=4$ bins), diferencia y espectro con los bins detectados. Abajo, zoom
   del recuadro rojo.}{fig:caso-real-diario}
-
-\figura{caso_real_pantalla.png}{0.8}{Foto de la pantalla de un computador: original, filtrada
-  con notch gaussiano ($\sigma=2$ bins), diferencia y espectro. En el zoom de la diferencia se ve
-  la rejilla de píxeles del monitor que el filtro quitó.}{fig:caso-real-pantalla}
 
 En la foto del diario (Figura~\ref{fig:caso-real-diario}) la trama aparece en el espectro como una
 grilla de puntos aislados: la frecuencia fundamental y sus armónicos. Con \texttt{umbral} $=0{,}1$
 se detectan 4 pares de manchas, y el notch borra solo el 0{,}39\,\% del espectro: los puntos de
 impresión desaparecen y la cara queda en gris continuo, y la diferencia es casi solo la trama. En
-la foto de la pantalla (Figura~\ref{fig:caso-real-pantalla}) pasa algo parecido: el notch borra el
+la foto de la pantalla pasa algo parecido: el notch borra el
 0{,}04\,\% del espectro y la diferencia es una rejilla de rayas cada 2 píxeles
 (Tabla~\ref{tab:caso-real}). En las dos fotos la energía en las zonas del notch baja unos 25~dB.
 
@@ -140,10 +136,6 @@ la foto de la pantalla (Figura~\ref{fig:caso-real-pantalla}) pasa algo parecido:
 
 El método tiene límites que se notan en el caso real. En el diario, la trama no es un coseno
 sumado: el tamaño de cada punto depende de qué tan oscura es esa zona, así que el patrón está
-modulado por la imagen, y por eso en la diferencia se insinúa la silueta de la cara. También
-quedan armónicos más lejanos y débiles que dejan un grano fino; bajar el umbral los alcanza, pero
-borra más espectro. En la foto de la pantalla queda una textura tipo laberinto que viene del
+modulado por la imagen, y por eso en la diferencia se insinúa la silueta de la cara. En la foto de la pantalla queda una textura tipo laberinto que viene del
 procesamiento de la cámara del celular. Como no es periódica, no forma picos aislados y el notch
-no la puede quitar, ni debería. Por último, la imagen que se mostró en el monitor existe, pero no
-sirve como referencia: la foto cambia escala, perspectiva y color, y no se puede comparar píxel a
-píxel.
+no la puede quitar, ni debería.
