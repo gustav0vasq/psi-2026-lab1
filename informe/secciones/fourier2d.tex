@@ -71,13 +71,13 @@ frecuencia y deja apenas un fondo texturado. Esto vale para este par de imágene
 
 Modelamos la interferencia periódica como un coseno 2D sumado a la imagen,
 \begin{equation}
-  r(x,y) = A\cos\!\left(2\pi\left(\frac{k_u\,x}{M} + \frac{k_v\,y}{N}\right)\right),
+  r(x,y) = A\cos\!\left(2\pi\left(\frac{k_u\,x}{W} + \frac{k_v\,y}{H}\right)\right),
   \label{eq:coseno2d}
 \end{equation}
-con $x$ la columna, $y$ la fila e imagen de $N\times M$ píxeles. Elegimos $k_u$ y $k_v$ enteros,
+con $x$ la columna, $y$ la fila e imagen de $H\times W$ píxeles. Elegimos $k_u$ y $k_v$ enteros,
 es decir, un número exacto de ciclos en toda la imagen. Así la frecuencia cae justo en un bin de
 la DFT 2D y aparecen exactamente dos picos, en $(k_v, k_u)$ y en su conjugado
-$(N-k_v,\,M-k_u)$, cada uno de altura $A\,NM/2$. Si los ciclos no fueran enteros habría fuga, como en la
+$(H-k_v,\,W-k_u)$, cada uno de altura $A\,HW/2$. Si los ciclos no fueran enteros habría fuga, como en la
 Sección~\ref{sec:dft}. Una prueba unitaria verifica que el coseno 2D da exactamente esos dos
 picos.
 
