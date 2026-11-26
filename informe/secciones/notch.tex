@@ -102,11 +102,10 @@ y la segunda es una foto que tomamos con el celular a la pantalla de un computad
 registrada la rejilla de píxeles del monitor. Las recortamos para dejar solo la zona con el patrón, sin
 texto ni marcos, que también forman patrones.
 
-Como no hay imagen de referencia, no se puede calcular PSNR ni SSIM. En su lugar medimos tres
-cosas: qué fracción del espectro borra la máscara, cuánto baja la energía en las zonas del notch, y si la imagen diferencia (original menos
-filtrada) tiene algo del contenido. Para esto último calculamos su correlación con las bajas
-frecuencias de la imagen ($|f|\le 0{,}05$ ciclos/píxel). Si el filtro solo sacó el patrón, esa
-correlación debería ser cero.
+Como no hay imagen de referencia, no se puede calcular PSNR ni SSIM. En su lugar medimos qué
+fracción del espectro borra la máscara (mientras menos, más localizado es el filtro) y cuánto baja
+la energía en las zonas del notch, y revisamos la imagen diferencia (original menos filtrada), que
+debería mostrar solo el patrón.
 
 \figura{caso_real_diario.png}{0.8}{Foto de diario con trama de puntos: original, filtrada con
   notch gaussiano ($\sigma=4$ bins), diferencia y espectro con los bins detectados. Abajo, zoom
@@ -119,22 +118,20 @@ correlación debería ser cero.
 En la foto del diario (Figura~\ref{fig:caso-real-diario}) la trama aparece en el espectro como una
 grilla de puntos aislados: la frecuencia fundamental y sus armónicos. Con \texttt{umbral} $=0{,}1$
 se detectan 4 pares de manchas, y el notch borra solo el 0{,}39\,\% del espectro: los puntos de
-impresión desaparecen y la cara queda en gris continuo. La diferencia es solo la trama, con
-correlación $0{,}000$ con el contenido. En la foto de la pantalla (Figura~\ref{fig:caso-real-pantalla}) pasa algo parecido: el notch
-borra el 0{,}04\,\% del espectro y la diferencia es una rejilla de rayas cada 2 píxeles, también
-sin correlación con el contenido (Tabla~\ref{tab:caso-real}). En las dos fotos la energía en las
-zonas del notch baja unos 25~dB.
+impresión desaparecen y la cara queda en gris continuo, y la diferencia es casi solo la trama. En
+la foto de la pantalla (Figura~\ref{fig:caso-real-pantalla}) pasa algo parecido: el notch borra el
+0{,}04\,\% del espectro y la diferencia es una rejilla de rayas cada 2 píxeles
+(Tabla~\ref{tab:caso-real}). En las dos fotos la energía en las zonas del notch baja unos 25~dB.
 
 \begin{table}[H]
   \centering
   \small
   \begin{tabular}{lcccccc}
     \toprule
-    Foto & umbral & $r_{\text{DC}}$ & $\sigma$ & espectro borrado & reducción en picos &
-      corr.\ diferencia--contenido \\
+    Foto & umbral & $r_{\text{DC}}$ & $\sigma$ & bins detectados & espectro borrado & reducción en picos \\
     \midrule
-    Diario   & 0{,}1 & 20  & 4 & 0{,}39\,\% & 24{,}3~dB & $0{,}000$ \\
-    Pantalla & 0{,}3 & 100 & 2 & 0{,}04\,\% & 25{,}6~dB & $0{,}000$ \\
+    Diario   & 0{,}1 & 20  & 4 & 48  & 0{,}39\,\% & 24{,}3~dB \\
+    Pantalla & 0{,}3 & 100 & 2 & 226 & 0{,}04\,\% & 25{,}6~dB \\
     \bottomrule
   \end{tabular}
   \caption{Evaluación sin referencia del caso real (tabla \texttt{caso\_real.csv}).}
