@@ -66,7 +66,6 @@ El caso real (C4, `fig_caso_real.py`) usa dos fotos con patrón periódico real 
 | `psi_lab.lab1.caso_imagen` | `reducir(img, k)` | img: 2D; k: entero >= 1 | `img[::k, ::k]` (1 de cada k px), **sin** filtrar antes |
 | `psi_lab.lab1.caso_imagen` | `pasabajos_separable_2d(img, fc, n_coef)` | img: 2D float; fc [ciclos/px] en (0, 0.5); n_coef: entero | imagen 2D de la misma forma: `fir_pasabajos(fc, 1, n_coef)` por filas y columnas, recortada al centro; ganancia 1 en DC, bordes oscurecidos ~n_coef/2 px por el relleno con ceros |
 | `psi_lab.lab1.datos` | `descargar_fotos(destino=DIR_DATOS)` | destino: carpeta (Path), por defecto `data/` o `PSI_DATOS` | `Path` de `destino/caso_real` con las fotos del GitHub Release (`URL_FOTOS`); idempotente; `RuntimeError` con mensaje claro si falla la descarga, el ZIP es inválido o faltan fotos |
-| ... | ... | ... | ... |
 
 ## Filtros FIR y notch 2D (R3)
 
