@@ -9,4 +9,32 @@
 \section{Discusión crítica y conclusiones}
 \label{sec:conclusiones}
 
-\textit{(Por escribir.)}
+\paragraph{El notch y sus límites.} Con dos interferencias sintéticas, el notch gaussiano
+($\sigma = 2$ bins) sube el PSNR de 15,7 a 51,8~dB (SSIM 0,997) y borra menos del 1\,\% del
+espectro. El pasabajos, en cambio, no pasa de 23~dB (SSIM 0,62). Esto pasa porque la
+interferencia ocupa muy pocas frecuencias y la imagen ocupa muchas, así que solo un filtro que
+corte justo esas frecuencias puede separarlas. Igual es un resultado demasiado bueno, porque las
+interferencias sintéticas tienen un número entero de ciclos y su pico cae justo en un bin. En una
+foto real eso no pasa y el pico se reparte en varios bins, por eso en el diario hubo que usar
+$\sigma = 4$.
+
+\paragraph{Evaluar sin referencia.} En el caso real (Sección~\ref{sec:caso-real}) la energía en las
+zonas del notch bajó unos 25~dB, lo que muestra que el patrón se redujo, pero no dice cuánto de la
+imagen se perdió. El porcentaje del espectro que se borró (0,39\,\% y 0,04\,\%) sirve para ver que
+ese daño es pequeño. La correlación de la diferencia con el contenido hay que leerla con cuidado,
+porque el notch solo toca frecuencias fuera de la zona de $|f|\le 0{,}05$, y dos señales que no
+comparten frecuencias siempre tienen correlación cero. Por eso da $0{,}000$ en las dos fotos, y
+seguiría dando eso aunque el filtro borrara detalle fino de la imagen. Al mirar de cerca, en el
+diario quedan armónicos débiles que no pasaron el umbral, y en la pantalla queda la textura de la
+cámara, que no es periódica. O sea, el notch solo quita lo que el detector encuentra, y lo más
+importante es el detector. Una forma más confiable de evaluar sería sumarle una interferencia
+conocida a una foto limpia parecida y medir el PSNR, como en la Sección~\ref{sec:notch-metricas}.
+
+\paragraph{Conclusiones.} La convolución por DFT da lo mismo que la directa solo si se rellena con
+ceros hasta $N+M-1$, y si no se hace sale la circular. El tiempo de la directa crece con el largo
+del filtro y el de la versión en frecuencia casi no cambia, así que esta última conviene para
+filtros largos. Antes de achicar una imagen hay que filtrar por debajo de $0{,}5/k$, porque si no
+el detalle fino vuelve como patrones falsos, y \texttt{frecuencia\_alias} predice dónde aparecen.
+Por último, el notch funciona muy bien cuando la interferencia ocupa pocas frecuencias, pero en
+fotos reales depende de encontrar todos los picos y de cómo se evalúa sin una imagen de
+referencia, que fue lo que menos logramos resolver.

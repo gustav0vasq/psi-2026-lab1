@@ -9,4 +9,51 @@
 \section{Caso C: aliasing espacial}
 \label{sec:aliasing}
 
-\textit{(Por escribir.)}
+Una imagen también es una señal muestreada, con una muestra por píxel, así que su límite de
+Nyquist es $0{,}5$ ciclos por píxel. Si achicamos la imagen tomando uno de cada $k$ píxeles
+(\texttt{reducir}, que hace \texttt{img[::k, ::k]}), es como muestrear de nuevo con
+$f_s = 1/k$ ciclos por píxel de la imagen original. El límite baja a $0{,}5/k$, y todo lo que esté
+por encima se dobla y aparece como una frecuencia más baja, igual que en la
+Sección~\ref{sec:muestreo}.
+
+Para verlo usamos la zone plate $I(x,y) = \tfrac12\left(1+\cos\left(\pi(x^2+y^2)/M\right)\right)$,
+con $x$ e $y$ centradas en $[-M/2, M/2)$. Su frecuencia en cada punto es $r/M$ ciclos por píxel,
+o sea que aumenta a medida que nos alejamos del centro, y por eso una sola imagen tiene todas las
+frecuencias ordenadas por distancia. Es importante centrar las coordenadas, ya que así la
+frecuencia llega justo a $0{,}5$ en el borde y la imagen original de $512\times512$ no tiene
+aliasing (si fueran de $0$ a $M$ llegaría a 1).
+
+\paragraph{Dónde aparecen los fantasmas.} Con \texttt{frecuencia\_alias} se puede predecir lo que
+se ve después de reducir. En cada dirección, la frecuencia aparente en la posición $x$ es
+\texttt{frecuencia\_alias}$(x/M,\ 1/k)$, que vale cero cuando $x/M$ es múltiplo de $1/k$, es decir,
+cada $M/k$ píxeles. En esos puntos la imagen reducida vuelve a verse como el centro de una zone
+plate. Con $M=512$ y $k=2$ eso pasa a 256 píxeles del centro, justo en los bordes y las esquinas, y
+con $k=4$ cada 128 píxeles, lo que da una grilla de copias. Es lo que se ve en la
+Figura~\ref{fig:alias} (arriba). Además, los fantasmas empiezan donde $r/M$ supera $0{,}5/k$, más
+cerca del centro con $k=4$ que con $k=2$.
+
+\paragraph{Prefiltro.} \texttt{pasabajos\_separable\_2d} usa el \texttt{fir\_pasabajos} de la
+Sección~\ref{sec:filtros} con $f_s = 1$, para que $f_c$ quede en ciclos por píxel. Lo aplica por
+filas y por columnas y después recorta la imagen a su tamaño original. Con 51 coeficientes y
+ventana Hamming, el filtro tarda unos $3{,}3/51 = 0{,}065$ ciclos por píxel en pasar de dejar
+pasar a cortar. Por eso pusimos el corte en $f_c = 0{,}5/k - 0{,}04$ y no justo en el nuevo límite,
+así casi todo ese cambio queda por debajo de $0{,}5/k$. Con filtro (abajo) quedan solo los anillos
+que caben y el resto queda gris, porque lo que no se puede mostrar se borra en vez de convertirse
+en un patrón falso.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{aliasing_zone_plate.png}\\[2pt]
+  \includegraphics[width=0.55\linewidth]{aliasing_foto.png}
+  \caption{Arriba, zone plate reducida por 2 y por 4, sin filtro y con pasabajos. Abajo, foto
+  \texttt{camera} reducida por 4.}
+  \label{fig:alias}
+\end{figure}
+
+También probamos con la foto \texttt{camera} (de \texttt{skimage.data}, que usamos solo para
+cargarla) reducida por 4. Sin filtro el pasto se ve como puntos sueltos y el trípode sale en
+escalera. Con filtro el pasto queda parejo, pero la imagen se ve más borrosa, y ese es el precio de
+evitar el aliasing. El marco que se ve en los bordes de las imágenes filtradas aparece porque el
+filtro rellena con ceros afuera de la imagen, y se podría evitar rellenando con la misma imagen
+reflejada. Entre otras cosas, las pruebas revisan que un coseno de $0{,}4$ ciclos por píxel
+reducido por 2 da exactamente las mismas muestras que uno de $0{,}2$.
