@@ -9,4 +9,51 @@
 \section{Muestreo y aliasing}
 \label{sec:muestreo}
 
-\textit{(Por escribir.)}
+\paragraph{Frecuencia aparente.}
+Una senoidal de frecuencia $f$ muestreada a $f_s$ da $x[n]=\cos(2\pi f n/f_s)$. Las muestras no cambian
+(i)~al sumar a $f$ un múltiplo de $f_s$, porque $\cos(2\pi (f+kf_s)n/f_s)=\cos(2\pi fn/f_s+2\pi kn)$ y $kn$
+es entero, ni (ii)~al cambiar su signo, porque el coseno es par. Todas las frecuencias $\pm f+kf_s$
+producen entonces exactamente las mismas muestras y no se pueden distinguir. Con $k^\ast=\operatorname{round}(f/f_s)$,
+la diferencia $f-k^\ast f_s$ cae en $[-f_s/2,\,f_s/2]$ y, por paridad, el representante del conjunto en
+$[0,\,f_s/2]$ es
+\begin{equation}
+  f_a \;=\; \bigl|\,f - f_s\,\operatorname{round}(f/f_s)\,\bigr| ,
+  \label{eq:alias}
+\end{equation}
+que es lo que calcula \texttt{frecuencia\_alias}. Si $f<f_s/2$ entonces $k^\ast=0$ y $f_a=f$ (sin aliasing,
+criterio de Nyquist); si no, la frecuencia se refleja alrededor de los múltiplos de $f_s/2$.
+
+\paragraph{Verificación.}
+Se muestrearon senoidales de $f\in\{3,7,13,23\}$~Hz con $f_s=10$~Hz durante 10~s y se midió la frecuencia
+aparente como el máximo del espectro (\texttt{espectro}, ventana rectangular, resolución
+$\Delta f = 1/T = 0{,}1$~Hz). La ecuación~\eqref{eq:alias} predice 3~Hz en los cuatro casos, ya que
+$7=10-3$, $13=10+3$ y $23=2\cdot10+3$; la medición coincide (tabla~\ref{tab:muestreo}). El error exacto
+de cero se debe a que cada tono cae justo en un bin ($f$ y $T$ enteros); en general el error de la medición
+está acotado por la resolución $\Delta f$.
+
+% Valores de out/tablas/muestreo_alias.csv (generada por figuras/fig_muestreo.py).
+\begin{table}[H]
+  \centering
+  \caption{Frecuencia aparente de senoidales muestreadas a $f_s=10$~Hz: predicha por
+           \eqref{eq:alias} y medida con el espectro.}
+  \label{tab:muestreo}
+  \begin{tabular}{rrrr}
+    \toprule
+    $f$ [Hz] & $f_a$ predicha [Hz] & $f_a$ medida [Hz] & error [Hz] \\
+    \midrule
+    3  & 3,0 & 3,0 & 0,0 \\
+    7  & 3,0 & 3,0 & 0,0 \\
+    13 & 3,0 & 3,0 & 0,0 \\
+    23 & 3,0 & 3,0 & 0,0 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\figura{muestreo_alias.png}{0.72}{Las senoidales de 3~Hz y 13~Hz (curvas, muestreadas muy fino) pasan por
+  exactamente las mismas muestras a $f_s=10$~Hz, pues $13=3+f_s$.}{fig:muestreo}
+
+La figura~\ref{fig:muestreo} lo muestra para 3~Hz y 13~Hz: a $f_s=10$~Hz las muestras son idénticas, y por lo
+tanto ningún procesamiento posterior puede recuperar cuál de las dos señales había. Las pruebas verifican
+propiedades, no valores: $f_a\in[0,f_s/2]$, periodicidad en $f_s$, paridad e idempotencia de
+\eqref{eq:alias}; que $f$ y $f_a$ generen las mismas muestras; y que, para 30 pares $(f,f_s)$ aleatorios,
+el pico del espectro caiga en \texttt{frecuencia\_alias}.
