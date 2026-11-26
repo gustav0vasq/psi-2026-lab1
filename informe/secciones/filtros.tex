@@ -1,13 +1,73 @@
 % Seccion: Filtros FIR y su caracterización
 % Responsable: R3. Extension: 1,5 pagina(s).
 % Solo R3 edita este archivo.
-%
-% Que debe contener (segun el enunciado y la pauta):
-%   - Diseño por ventanas; pasaaltos, pasabanda y rechazabanda por inversión espectral.
-%   - Tabla de ancho de transición y atenuación según n_coef y ventana.
-%   - Chirp filtrado (filtros_chirp.png).
 
 \section{Filtros FIR y su caracterización}
 \label{sec:filtros}
 
-\textit{(Por escribir.)}
+\paragraph{Métodos.}
+Al pasabajos ideal $h_d[m]=2f_n\,\mathrm{sinc}(2f_n m)$, con $f_n=f_c/f_s$, lo truncamos a $N$
+coeficientes centrados en $M=(N-1)/2$, lo multiplicamos por una ventana $w[n]$ y normalizamos
+para ganancia 1 en DC (\texttt{filtros.py}):
+$h_{\text{lp}}[n]=h_d[n-M]\,w[n]\big/\sum_k h_d[k-M]\,w[k]$. Los demás filtros salen de él.
+Como $\delta[n-M]$ pasa todas las frecuencias con el mismo retardo que $h_{\text{lp}}$,
+\begin{equation}
+  h_{\text{pa}}=\delta[n-M]-h_{\text{lp}}(f_c),\quad
+  h_{\text{pb}}=h_{\text{lp}}(f_2)-h_{\text{lp}}(f_1),\quad
+  h_{\text{rb}}=\delta[n-M]-h_{\text{pb}}.
+  \label{eq:fir}
+\end{equation}
+El pasaaltos y el rechazabanda exigen $N$ impar: con $N$ par $M$ no es entero y la delta no
+existe. Los coeficientes son simétricos (fase lineal, retardo $M$). \texttt{filtrar} convoluciona
+con la \texttt{convolucion\_fft} del grupo, sin \texttt{np.convolve}, y recorta $M$ muestras para
+alinear la salida. Las pruebas verifican ganancia $\approx1$ en paso, menos de $-40$\,dB
+en rechazo (Hamming), simetría y que un pulso no se desplaza.
+
+\paragraph{Caracterización.}
+Para $f_c=100$\,Hz y $f_s=1000$\,Hz variamos $N\in\{21,51,101,201\}$ y la ventana
+(Figura~\ref{fig:filtros-ncoef}, Tabla~\ref{tab:filtros}). \texttt{medir\_pasabajos} define la
+atenuación como $-20\log_{10}\delta$, con $\delta$ el máximo de $|H|$ después del primer mínimo
+sobre $f_c$ (fin del lóbulo principal), y el ancho como la distancia entre $|H|=1-\delta$ y
+$|H|=\delta$.
+
+\figura{filtros_n_coef.png}{0.9}{Pasabajos $f_c=100$\,Hz. $N$ cambia el ancho de la transición
+  y la ventana cambia la atenuación en rechazo.}{fig:filtros-ncoef}
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{lcccccc}
+    \toprule
+    & \multicolumn{4}{c}{ancho de transición [Hz]} & $\Delta f\cdot N/f_s$ & atenuación [dB] \\
+    \cmidrule(lr){2-5}
+    Ventana & $N=21$ & $51$ & $101$ & $201$ & ($N=201$) & ($N=201$) \\
+    \midrule
+    Rectangular & 42{,}4  & 20{,}1  & 9{,}1  & 4{,}6  & 0{,}92 & 21{,}1 \\
+    Hann        & 164{,}9 & 62{,}3  & 31{,}3 & 15{,}6 & 3{,}14 & 43{,}9 \\
+    Hamming     & 168{,}5 & 68{,}3  & 32{,}7 & 16{,}5 & 3{,}32 & 53{,}5 \\
+    Blackman    & 237{,}5 & 109{,}1 & 56{,}7 & 28{,}0 & 5{,}62 & 75{,}3 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Ancho de transición y atenuación del pasabajos
+    (\texttt{filtros\_transicion\_atenuacion.csv}). La atenuación varía menos de 2\,dB entre los
+    cuatro valores de $N$.}
+  \label{tab:filtros}
+\end{table}
+
+Primero, el ancho es inversamente proporcional a $N$: $\Delta f\cdot N/f_s$ queda casi constante
+en cada ventana (0{,}9; 3{,}1; 3{,}3 y 5{,}6), así que duplicar $N$ lo reduce a la mitad. Segundo,
+la atenuación depende de la ventana y no de $N$. La rectangular se queda en unos 21\,dB porque el
+rizado de Gibbs de la truncación solo se angosta y no baja de altura. Las demás ventanas bajan los
+lóbulos laterales a costa de ensanchar el lóbulo principal, el mismo compromiso entre resolución
+y fuga de la Tarea~2: Blackman da 75\,dB y cuesta seis veces el ancho de la rectangular. Hamming
+es la ventana por defecto del enunciado. Con $N=101$, uno de los cuatro valores pedidos, da 33\,Hz
+de transición y 53\,dB, por lo que cumple el requisito de $-40$\,dB de la Tarea~4.
+
+\paragraph{Chirp.}
+Un chirp de 0 a 500\,Hz en 1\,s tiene $f(t)=500\,t$, así que el eje del tiempo es también un eje
+de frecuencia. A la salida del pasabajos (Figura~\ref{fig:filtros-chirp}) la amplitud se conserva
+hasta $t\approx0{,}2$\,s, se apaga durante la transición, de $\Delta f/500\approx0{,}065$\,s, y
+después es casi cero.
+
+\figura{filtros_chirp.png}{0.55}{Chirp de 0 a 500\,Hz filtrado con el pasabajos de 100\,Hz
+  (Hamming, $N=101$). En naranja, la banda de transición medida.}{fig:filtros-chirp}
