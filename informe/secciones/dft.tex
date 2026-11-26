@@ -38,7 +38,7 @@ porque desde $N=2048$ los bloques de $W$ ya no caben en la caché del procesador
 pendiente queda cerca de 1, lo que calza con $O(N\log N)$, ya que $\log N$ cambia poco en este
 rango. Con $N=4096$ nuestra \texttt{dft} es del orden de $10^4$ veces más lenta.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.45\linewidth]{dft_tiempos.png}\hfill
   \includegraphics[width=0.53\linewidth]{dft_fuga.png}
@@ -63,7 +63,7 @@ exactamente los originales (una de las pruebas revisa esto). El relleno mejora c
 espectro y ayuda a ubicar mejor el máximo, pero la resolución depende solo de $T$. Con $T=1$~s
 los tonos se separan sin rellenar nada.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.62\linewidth]{dft_resolucion.png}
   \caption{Tonos de 50 y 52~Hz para $T$ de 0{,}25 a 2~s. Los puntos son los bins de la DFT (cada
@@ -71,7 +71,7 @@ los tonos se separan sin rellenar nada.
   \label{fig:dft-resolucion}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.62\linewidth]{dft_relleno.png}
   \caption{Izquierda: $T=0{,}25$~s con $N_{\text{fft}}=N$ y con $8N$, siempre un solo lóbulo.
