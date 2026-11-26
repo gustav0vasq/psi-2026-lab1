@@ -28,12 +28,8 @@ descarga las dos fotos reales del caso C desde un \emph{release} del repositorio
 copiados) y de integración; el CI ejecuta además el análisis estático y las pruebas en Python 3.11 a 3.13.\par}
 
 \paragraph{Funciones de bibliotecas usadas.}
-En la parte común solo se usa NumPy para el cálculo; \texttt{np.\allowbreak fft}, \texttt{np.\allowbreak convolve} y
-\texttt{scipy.\allowbreak signal} aparecen únicamente dentro de las pruebas, como referencia, y
-\texttt{np.\allowbreak fft.\allowbreak fft} en la comparación de tiempos de la DFT. En el caso C se usan, como auxiliares: \texttt{np.fft} (\texttt{fft},
-\texttt{ifft}, \texttt{fftshift}, \texttt{fftfreq}) para la DFT 2D y para mostrar espectros;
-\texttt{skimage.\allowbreak data} (imágenes \texttt{camera} y \texttt{astronaut}),
-\texttt{skimage.\allowbreak color.\allowbreak rgb2gray}, \texttt{skimage.\allowbreak io.\allowbreak imread}
-(lectura de las fotos) y \texttt{skimage.\allowbreak metrics.\allowbreak structural\_\allowbreak similarity}
-(SSIM). \texttt{scipy.\allowbreak ndimage} y \texttt{scipy.\allowbreak signal} se usan solo en pruebas. La detección de picos, los filtros
-notch, el PSNR y el pasabajos gaussiano son implementaciones propias.
+En la parte común solo se usa NumPy para el cálculo; \texttt{np.fft}, \texttt{np.convolve} y
+\texttt{scipy} aparecen solo en las pruebas, como referencia (y \texttt{np.fft.fft} en la comparación
+de tiempos de la DFT). En el caso C usamos como auxiliares \texttt{np.fft} para la DFT 2D y
+\texttt{skimage} para cargar imágenes y calcular SSIM. La detección de picos, los notch, el PSNR y
+el pasabajos gaussiano son propios.
