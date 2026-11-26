@@ -10,4 +10,59 @@
 \section{Convolución directa y por FFT}
 \label{sec:convolucion}
 
-\textit{(Por escribir.)}
+La convolución lineal de $x$ (largo $N$) con $h$ (largo $M$) es
+\begin{equation}
+  y[n] = \sum_{k} x[k]\, h[n-k], \qquad n = 0, \dots, N+M-2,
+  \label{eq:conv}
+\end{equation}
+y entrega $N+M-1$ muestras. \texttt{convolucion\_directa} la calcula con dos ciclos, y el ciclo de
+adentro recorre $h$ para que el costo sea $O(NM)$.
+
+\texttt{convolucion\_fft} usa el teorema de la convolución, que dice que convolucionar en el tiempo
+es lo mismo que multiplicar en frecuencia. Si $\tilde{x}$ y $\tilde{h}$ son $x$ y $h$ completadas
+con ceros hasta largo $L = N+M-1$,
+\begin{equation}
+  y = \mathrm{IDFT}\big(\mathrm{DFT}(\tilde{x}) \cdot \mathrm{DFT}(\tilde{h})\big),
+  \label{eq:teorema-conv}
+\end{equation}
+donde el producto es punto a punto y usamos la \texttt{dft} y la \texttt{idft} de la
+Sección~\ref{sec:dft}. Al final nos quedamos con la parte real, porque la parte imaginaria que
+queda es casi cero ($10^{-16}$) y sale solo por el redondeo. En las pruebas comparamos las dos
+versiones con \texttt{np.convolve} y entre ellas, y revisamos que un impulso en la posición $d$
+mueve la señal $d$ muestras y que $x*h = h*x$.
+
+\paragraph{Por qué rellenar con ceros.} La DFT de $L$ puntos supone que la señal se repite cada $L$
+muestras, por eso al multiplicar DFTs sale la convolución \emph{circular}. Si no se rellena, las
+últimas $M-1$ muestras no caben y se suman al comienzo. En la Figura~\ref{fig:conv}a usamos un
+pulso cerca del final de $x$ ($N=40$) y una exponencial de $M=15$ coeficientes para que la cola
+sea grande. Se ve que la cola de la lineal (muestras 40 a 53) aparece igual en las muestras 0 a 13
+de la circular, donde la lineal vale cero.
+
+\paragraph{Tiempos.} Dejamos $N=500$ fijo y probamos $M$ entre 4 y 512. Cada caso se midió 3 veces
+y usamos el menor tiempo, para que no influyeran otros programas del computador. En escala log-log
+la directa es una recta de pendiente 1, o sea que su tiempo crece igual que $M$, como dice $O(NM)$
+(Figura~\ref{fig:conv}b). La versión por DFT casi no cambia, porque su costo depende de
+$L = N+M-1$ y ese largo cambia poco mientras $M$ sea mucho menor que $N$. En nuestra prueba las
+curvas se cruzan cerca de $M = 128$. Hay que tener cuidado con ese número, porque nuestra
+\texttt{dft} es $O(L^2)$ pero usa operaciones rápidas de NumPy, mientras que la directa usa ciclos
+de Python, que son más lentos. Por eso lo que conviene comparar son las pendientes. Con una FFT de
+verdad, que es $O(L\log L)$, el cruce pasaría con filtros mucho más cortos.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.55\linewidth}\centering
+    \includegraphics[width=\linewidth]{convolucion_circular.png}\\(a)
+  \end{minipage}\hfill
+  \begin{minipage}{0.42\linewidth}\centering
+    \includegraphics[width=\linewidth]{convolucion_tiempos.png}\\(b)
+  \end{minipage}
+  \caption{(a) Convolución lineal y circular sin relleno. La franja roja es la cola que se pasó
+  al comienzo. (b) Tiempo de las dos versiones según el largo de $h$.}
+  \label{fig:conv}
+\end{figure}
+
+Para el caso C agregamos \texttt{convolucion\_separable\_2d}, que pasa un filtro por cada fila y
+otro por cada columna de la imagen. El resultado es el mismo que usar el filtro 2D
+$h_\text{cols}\,h_\text{filas}^{T}$ (lo comparamos con \texttt{scipy.signal.convolve2d}), pero se
+hacen $2M$ operaciones por píxel en vez de $M^2$. La usamos en el prefiltro de la
+Sección~\ref{sec:aliasing}.
