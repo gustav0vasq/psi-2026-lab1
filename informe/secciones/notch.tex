@@ -19,8 +19,7 @@ $A\cos\!\big(2\pi(k_u x+k_v y)/512\big)$ con ciclos enteros, $(A,k_u,k_v)\in\{(0
 (0{,}12;70;-50),\,(0{,}15;100;15)\}$. Cada una produce dos picos conjugados en $(k_v,k_u)$ y
 $(512-k_v,\,512-k_u)$, que \texttt{detectar\_picos} (umbral $0{,}3$, excluye el DC) entrega como pares
 completos. Sobre el espectro sin \texttt{fftshift} aplicamos una máscara $H$ y reconstruimos
-$\mathrm{idft2}(E\cdot H)$. Si $H$ borra los dos picos de cada par, la imagen sale real
-(la prueba comprueba que \texttt{imag}\,$\approx0$ y que borrar un solo pico la deja compleja).
+$\mathrm{idft2}(E\cdot H)$. Si $H$ borra los dos picos de cada par, la imagen sale real.
 Las máscaras son
 \begin{equation}
   H_{\text{ideal}}=\begin{cases}0 & d_i\le r\ \text{para algún pico }i\\ 1 & \text{en otro caso}\end{cases},
@@ -35,10 +34,9 @@ gaussiano espacial, convolución separable con un núcleo de $2\lceil3\sigma\rce
 (\texttt{convolucion\_separable\_2d} del grupo), cuya respuesta es
 $e^{-2\pi^2\sigma^2 f^2}$. Medimos con
 $\mathrm{PSNR}=10\log_{10}\!\big(1/\mathrm{MSE}\big)$, implementado por nosotros, y con
-SSIM de \texttt{skimage.metrics}, contra la imagen original. Como auxiliares de biblioteca
-usamos solo \texttt{skimage.data.camera} y \texttt{structural\_similarity}.
+SSIM de \texttt{skimage.metrics}, contra la imagen original.
 
-\figura{notch_comparacion.png}{0.9}{Arriba: imagen con dos interferencias, notch ideal
+\figura{notch_comparacion.png}{0.72}{Arriba: imagen con dos interferencias, notch ideal
   ($r=2$), notch gaussiano ($\sigma=2$) y pasabajos gaussiano ($\sigma=6$\,px). Abajo: espectro,
   las dos máscaras (centradas solo para mostrar) y el espectro tras el notch.}{fig:notch-comp}
 
@@ -79,9 +77,6 @@ entre 4 y 9\,dB (de 55{,}8 a 51{,}5\,dB entre $r=1$ y $2$, y de 40{,}9 a 31{,}6\
 $16$), porque la máscara cubre cada vez más bins de la imagen y no solo el de la interferencia.
 Con 1, 2 y 3 interferencias el PSNR inicial baja de 17{,}0 a 14{,}2\,dB y tras el notch con $r=2$
 queda entre 51{,}3 y 51{,}8\,dB, es decir, cada par de picos se borra de forma independiente.
-La figura usa $r=\sigma=2$; la tabla muestra el efecto de otros valores. En el pasabajos de la
-figura, $\sigma=6$\,px atenúa la interferencia principal por $e^{-2\pi^2\sigma^2f^2}\approx0{,}002$,
-pero el mejor PSNR del barrido ($\sigma=2,4,6,8$\,px) es con $\sigma=4$\,px.
 
 Un patrón real no tiene ciclos enteros y la fuga espectral abre el pico. Al desplazar $k_u$ en
 $0$, $0{,}25$ y $0{,}5$ bins, el detector pasa de 2 a 4 y a 8 picos, el radio que maximiza el PSNR
