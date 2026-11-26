@@ -15,9 +15,9 @@
 
 \paragraph{Métodos.}
 Sumamos a \texttt{camera} (512$\times$512, en $[0,1]$) hasta tres interferencias
-$A\cos\!\big(2\pi(k_u x/W+k_v y/H)\big)$ con ciclos enteros, $(A,k_u,k_v)\in\{(0{,}2;40;25),\,
+$A\cos\!\big(2\pi(k_u x+k_v y)/512\big)$ con ciclos enteros, $(A,k_u,k_v)\in\{(0{,}2;40;25),\,
 (0{,}12;70;-50),\,(0{,}15;100;15)\}$. Cada una produce dos picos conjugados en $(k_v,k_u)$ y
-$(H-k_v,W-k_u)$, que \texttt{detectar\_picos} (umbral $0{,}3$, excluye el DC) entrega como pares
+$(512-k_v,\,512-k_u)$, que \texttt{detectar\_picos} (umbral $0{,}3$, excluye el DC) entrega como pares
 completos. Sobre el espectro sin \texttt{fftshift} aplicamos una máscara $H$ y reconstruimos
 $\mathrm{idft2}(E\cdot H)$. Si $H$ borra los dos picos de cada par, la imagen sale real
 (la prueba comprueba que \texttt{imag}\,$\approx0$ y que borrar un solo pico la deja compleja).
