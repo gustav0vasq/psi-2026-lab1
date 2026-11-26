@@ -25,8 +25,10 @@ con ceros hasta largo $L = N+M-1$,
   y = \mathrm{IDFT}\big(\mathrm{DFT}(\tilde{x}) \cdot \mathrm{DFT}(\tilde{h})\big),
   \label{eq:teorema-conv}
 \end{equation}
-donde el producto es punto a punto y usamos la \texttt{dft} y la \texttt{idft} de la
-Sección~\ref{sec:dft}. Al final nos quedamos con la parte real, porque la parte imaginaria que
+donde el producto es punto a punto. Para las transformadas usamos una FFT radix-2 propia
+(\texttt{fft\_radix2}), de costo $O(L\log L)$, por lo que $\tilde{x}$ y $\tilde{h}$ se rellenan
+con ceros hasta la potencia de 2 siguiente a $N+M-1$ y después se recorta el resultado a $N+M-1$
+muestras. Al final nos quedamos con la parte real, porque la parte imaginaria que
 queda es casi cero ($10^{-16}$) y sale solo por el redondeo. En las pruebas comparamos las dos
 versiones con \texttt{np.convolve} y entre ellas, y revisamos que un impulso en la posición $d$
 mueve la señal $d$ muestras y que $x*h = h*x$.
@@ -41,14 +43,16 @@ de la circular, donde la lineal vale cero.
 \paragraph{Tiempos.} Dejamos $N=500$ fijo y probamos $M$ entre 4 y 512. Cada caso se midió 3 veces
 y usamos el menor tiempo, para que no influyeran otros programas del computador. En escala log-log
 la directa es una recta de pendiente 1, o sea que su tiempo crece igual que $M$, como dice $O(NM)$
-(Figura~\ref{fig:conv}b). La versión por DFT casi no cambia, porque su costo depende de
-$L = N+M-1$ y ese largo cambia poco mientras $M$ sea mucho menor que $N$. En nuestra prueba las
-curvas se cruzan cerca de $M = 128$. Hay que tener cuidado con ese número, porque nuestra
-\texttt{dft} es $O(L^2)$ pero usa operaciones rápidas de NumPy, mientras que la directa usa ciclos
-de Python, que son más lentos. Por eso lo que conviene comparar son las pendientes. Con una FFT de
-verdad, que es $O(L\log L)$, el cruce pasaría con filtros mucho más cortos.
+(Figura~\ref{fig:conv}b). La versión por FFT casi no cambia, porque su costo depende del largo de
+la FFT, la potencia de 2 siguiente a $N+M-1$, y no de $M$: tarda unos 0{,}6~ms en todos los casos,
+con un pequeño salto cuando $N+M-1$ pasa de 512 y la FFT sube de 512 a 1024 puntos. En el
+computador donde se generaron las figuras de este informe, la versión por FFT fue más rápida para
+todos los largos probados, desde $M=4$ (\texttt{convolucion\_tiempos.csv}). El largo exacto desde
+el que conviene depende de la máquina, porque la directa usa ciclos de Python, mucho más lentos por
+operación que las operaciones vectorizadas de NumPy; lo que no cambia es la tendencia, $O(NM)$
+para la directa y casi constante para la FFT.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \begin{minipage}{0.55\linewidth}\centering
     \includegraphics[width=\linewidth]{convolucion_circular.png}\\(a)

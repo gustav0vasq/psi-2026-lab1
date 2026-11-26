@@ -17,8 +17,7 @@ Para una imagen $I$ de $H\times W$ píxeles, su DFT 2D es
 \end{equation}
 El núcleo se separa en un producto de exponenciales en $y$ y en $x$, así que basta aplicar la DFT 1D a
 cada fila y luego a cada columna; \texttt{dft2} lo hace con \texttt{np.fft.fft}. No se usó la
-\texttt{dft} propia porque es $O(N^2)$: una imagen de $512\times512$ requiere 1024 transformadas, del
-orden de 10~s con la \texttt{dft} frente a unos 20~ms con \texttt{np.fft.fft}. El arreglo de trabajo no
+\texttt{dft} propia porque, siendo $O(N^2)$, una imagen de $512\times512$ tardaría unos 10~s. El arreglo de trabajo no
 se centra (el DC queda en $E[0,0]$); \texttt{fftshift} se aplica solo para mostrar
 (\texttt{espectro\_log}, que grafica $\log(1+|E|)$).
 
@@ -36,32 +35,17 @@ discontinuidades entre bordes opuestos aportan energía en $u=0$ y $v=0$, y lín
 perpendiculares a los bordes largos de la imagen (las patas del trípode). La fase, en cambio, parece
 ruido a simple vista.
 
-\figura{fourier2d_espectro.png}{0.85}{Imagen \texttt{camera}, magnitud $\log(1+|E|)$ y fase de su DFT 2D
+\figura{fourier2d_espectro.png}{0.68}{Imagen \texttt{camera}, magnitud $\log(1+|E|)$ y fase de su DFT 2D
   (centradas con \texttt{fftshift} solo para graficar).}{fig:fourier2d_espectro}
 
 Para ver qué información lleva cada una se intercambiaron las fases de dos imágenes ($A$: \texttt{camera},
 $B$: \texttt{astronaut}): se reconstruyó con la magnitud de una y la fase de la otra
 (figura~\ref{fig:fourier2d_fases}). La híbrida se parece a la imagen que aporta la \emph{fase}. Con la
-correlación de Pearson entre la híbrida y cada original (tabla~\ref{tab:fases}) se obtiene $0{,}73$ con la
+correlación de Pearson entre la híbrida y cada original (\texttt{fourier2d\_fases.csv}) se obtiene $0{,}73$ con la
 que aporta la fase y solo $0{,}11$ y $0{,}08$ con la que aporta la magnitud. La fase determina dónde están
 los bordes y las formas (cómo se alinean las componentes); la magnitud solo dice cuánta energía hay en cada
 frecuencia y deja apenas un fondo texturado. Esto vale para este par de imágenes y esa medida de similitud.
 
-% Valores de out/tablas/fourier2d_fases.csv (generada por figuras/fig_fourier2d.py).
-\begin{table}[H]
-  \centering
-  \small
-  \caption{Correlación de Pearson entre cada imagen híbrida y las originales $A$ y $B$.}
-  \label{tab:fases}
-  \begin{tabular}{lrr}
-    \toprule
-    Híbrida & corr. con $A$ & corr. con $B$ \\
-    \midrule
-    magnitud de $A$ + fase de $B$ & 0,11 & 0,73 \\
-    magnitud de $B$ + fase de $A$ & 0,73 & 0,08 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
 
 \figura{fourier2d_fases.png}{0.5}{Intercambio de fases entre $A$ (\texttt{camera}) y $B$ (\texttt{astronaut}):
   abajo, magnitud de una con la fase de la otra.}{fig:fourier2d_fases}
@@ -71,13 +55,13 @@ frecuencia y deja apenas un fondo texturado. Esto vale para este par de imágene
 
 Modelamos la interferencia periódica como un coseno 2D sumado a la imagen,
 \begin{equation}
-  r(x,y) = A\cos\!\left(2\pi\left(\frac{k_u\,x}{M} + \frac{k_v\,y}{N}\right)\right),
+  r(x,y) = A\cos\!\left(2\pi\left(\frac{k_u\,x}{W} + \frac{k_v\,y}{H}\right)\right),
   \label{eq:coseno2d}
 \end{equation}
-con $x$ la columna, $y$ la fila e imagen de $N\times M$ píxeles. Elegimos $k_u$ y $k_v$ enteros,
+con $x$ la columna, $y$ la fila e imagen de $H\times W$ píxeles. Elegimos $k_u$ y $k_v$ enteros,
 es decir, un número exacto de ciclos en toda la imagen. Así la frecuencia cae justo en un bin de
 la DFT 2D y aparecen exactamente dos picos, en $(k_v, k_u)$ y en su conjugado
-$(N-k_v,\,M-k_u)$, cada uno de altura $A\,NM/2$. Si los ciclos no fueran enteros habría fuga, como en la
+$(H-k_v,\,W-k_u)$, cada uno de altura $A\,HW/2$. Si los ciclos no fueran enteros habría fuga, como en la
 Sección~\ref{sec:dft}. Una prueba unitaria verifica que el coseno 2D da exactamente esos dos
 picos.
 
@@ -93,10 +77,9 @@ interferencia débil. Para elegir $r_{\text{DC}}$ probamos con la imagen \texttt
 interferencias de amplitud decreciente (Tabla~\ref{tab:sensibilidad}). Con $r_{\text{DC}}=10$
 el detector encuentra los 4 picos sin ningún falso hasta una amplitud de 0{,}05; con
 $r_{\text{DC}}=4$ ya aparecen falsos con 0{,}1. Bajo 0{,}02 ninguno de los dos funciona bien, y
-ese es el límite del método. El costo es no detectar patrones de menos de 10 ciclos en la imagen,
-que de todas formas se confunden con el contenido. Usamos \texttt{umbral} $=0{,}3$.
+ese es el límite del método. Usamos \texttt{umbral} $=0{,}3$.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \small
   \begin{tabular}{ccccc}
@@ -116,7 +99,7 @@ que de todas formas se confunden con el contenido. Usamos \texttt{umbral} $=0{,}
   \label{tab:sensibilidad}
 \end{table}
 
-\figura{ruido_deteccion.png}{0.75}{Imagen \texttt{camera} limpia, con dos interferencias y su
+\figura{ruido_deteccion.png}{0.62}{Imagen \texttt{camera} limpia, con dos interferencias y su
   espectro centrado. Los círculos rojos son los 4 picos detectados (dos pares conjugados).}%
   {fig:ruido-deteccion}
 

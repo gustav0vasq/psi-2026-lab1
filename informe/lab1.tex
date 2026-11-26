@@ -8,7 +8,7 @@
 % Para compilar (desde la raiz del repositorio):
 %     psi-lab1                              # genera out/ con todas las figuras y tablas
 %     cd informe && latexmk -pdf lab1.tex   # genera informe/lab1.pdf
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish, es-noshorthands]{babel}
@@ -17,13 +17,15 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{float}
+\renewcommand{\topfraction}{0.9}\renewcommand{\bottomfraction}{0.8}\renewcommand{\textfraction}{0.07}\renewcommand{\floatpagefraction}{0.85}\setcounter{topnumber}{3}\setcounter{totalnumber}{4}
+\usepackage[section]{placeins}
 \usepackage[hidelinks]{hyperref}
 
 \graphicspath{{../out/}}  % figuras generadas por psi-lab1
 
 % \figura{archivo.png}{ancho como fraccion de \linewidth}{leyenda}{etiqueta}
 \newcommand{\figura}[4]{%
-  \begin{figure}[H]
+  \begin{figure}[htbp]
     \centering
     \includegraphics[width=#2\linewidth]{#1}
     \caption{#3}

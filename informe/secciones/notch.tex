@@ -15,12 +15,11 @@
 
 \paragraph{Métodos.}
 Sumamos a \texttt{camera} (512$\times$512, en $[0,1]$) hasta tres interferencias
-$A\cos\!\big(2\pi(k_u x/W+k_v y/H)\big)$ con ciclos enteros, $(A,k_u,k_v)\in\{(0{,}2;40;25),\,
+$A\cos\!\big(2\pi(k_u x+k_v y)/512\big)$ con ciclos enteros, $(A,k_u,k_v)\in\{(0{,}2;40;25),\,
 (0{,}12;70;-50),\,(0{,}15;100;15)\}$. Cada una produce dos picos conjugados en $(k_v,k_u)$ y
-$(H-k_v,W-k_u)$, que \texttt{detectar\_picos} (umbral $0{,}3$, excluye el DC) entrega como pares
+$(512-k_v,\,512-k_u)$, que \texttt{detectar\_picos} (umbral $0{,}3$, excluye el DC) entrega como pares
 completos. Sobre el espectro sin \texttt{fftshift} aplicamos una máscara $H$ y reconstruimos
-$\mathrm{idft2}(E\cdot H)$. Si $H$ borra los dos picos de cada par, la imagen sale real
-(la prueba comprueba que \texttt{imag}\,$\approx0$ y que borrar un solo pico la deja compleja).
+$\mathrm{idft2}(E\cdot H)$. Si $H$ borra los dos picos de cada par, la imagen sale real.
 Las máscaras son
 \begin{equation}
   H_{\text{ideal}}=\begin{cases}0 & d_i\le r\ \text{para algún pico }i\\ 1 & \text{en otro caso}\end{cases},
@@ -35,10 +34,9 @@ gaussiano espacial, convolución separable con un núcleo de $2\lceil3\sigma\rce
 (\texttt{convolucion\_separable\_2d} del grupo), cuya respuesta es
 $e^{-2\pi^2\sigma^2 f^2}$. Medimos con
 $\mathrm{PSNR}=10\log_{10}\!\big(1/\mathrm{MSE}\big)$, implementado por nosotros, y con
-SSIM de \texttt{skimage.metrics}, contra la imagen original. Como auxiliares de biblioteca
-usamos solo \texttt{skimage.data.camera} y \texttt{structural\_similarity}.
+SSIM de \texttt{skimage.metrics}, contra la imagen original.
 
-\figura{notch_comparacion.png}{0.9}{Arriba: imagen con dos interferencias, notch ideal
+\figura{notch_comparacion.png}{0.72}{Arriba: imagen con dos interferencias, notch ideal
   ($r=2$), notch gaussiano ($\sigma=2$) y pasabajos gaussiano ($\sigma=6$\,px). Abajo: espectro,
   las dos máscaras (centradas solo para mostrar) y el espectro tras el notch.}{fig:notch-comp}
 
@@ -50,7 +48,7 @@ interferencia más fuerte está en $f=0{,}092$ ciclos/píxel y el pasabajos la a
 $e^{-2\pi^2\sigma^2f^2}$, que con $\sigma=2$ es solo $0{,}51$ y recién con $\sigma=4$ baja a
 $0{,}07$. Pero a esa escala ya difumina bordes y textura (Figura~\ref{fig:notch-comp}). El notch quita energía en unos pocos bins aislados y deja el resto del espectro.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \small
   \begin{tabular}{llcc}
@@ -79,9 +77,6 @@ entre 4 y 9\,dB (de 55{,}8 a 51{,}5\,dB entre $r=1$ y $2$, y de 40{,}9 a 31{,}6\
 $16$), porque la máscara cubre cada vez más bins de la imagen y no solo el de la interferencia.
 Con 1, 2 y 3 interferencias el PSNR inicial baja de 17{,}0 a 14{,}2\,dB y tras el notch con $r=2$
 queda entre 51{,}3 y 51{,}8\,dB, es decir, cada par de picos se borra de forma independiente.
-La figura usa $r=\sigma=2$; la tabla muestra el efecto de otros valores. En el pasabajos de la
-figura, $\sigma=6$\,px atenúa la interferencia principal por $e^{-2\pi^2\sigma^2f^2}\approx0{,}002$,
-pero el mejor PSNR del barrido ($\sigma=2,4,6,8$\,px) es con $\sigma=4$\,px.
 
 Un patrón real no tiene ciclos enteros y la fuga espectral abre el pico. Al desplazar $k_u$ en
 $0$, $0{,}25$ y $0{,}5$ bins, el detector pasa de 2 a 4 y a 8 picos, el radio que maximiza el PSNR
@@ -102,39 +97,32 @@ y la segunda es una foto que tomamos con el celular a la pantalla de un computad
 registrada la rejilla de píxeles del monitor. Las recortamos para dejar solo la zona con el patrón, sin
 texto ni marcos, que también forman patrones.
 
-Como no hay imagen de referencia, no se puede calcular PSNR ni SSIM. En su lugar medimos tres
-cosas: qué fracción del espectro borra la máscara, cuánto baja la energía en las zonas del notch, y si la imagen diferencia (original menos
-filtrada) tiene algo del contenido. Para esto último calculamos su correlación con las bajas
-frecuencias de la imagen ($|f|\le 0{,}05$ ciclos/píxel). Si el filtro solo sacó el patrón, esa
-correlación debería ser cero.
+Como no hay imagen de referencia, no se puede calcular PSNR ni SSIM. En su lugar medimos qué
+fracción del espectro borra la máscara (mientras menos, más localizado es el filtro) y cuánto baja
+la energía en las zonas del notch, y revisamos la imagen diferencia (original menos filtrada), que
+debería mostrar solo el patrón.
 
-\figura{caso_real_diario.png}{0.8}{Foto de diario con trama de puntos: original, filtrada con
+\figura{caso_real_diario.png}{0.62}{Foto de diario con trama de puntos: original, filtrada con
   notch gaussiano ($\sigma=4$ bins), diferencia y espectro con los bins detectados. Abajo, zoom
   del recuadro rojo.}{fig:caso-real-diario}
-
-\figura{caso_real_pantalla.png}{0.8}{Foto de la pantalla de un computador: original, filtrada
-  con notch gaussiano ($\sigma=2$ bins), diferencia y espectro. En el zoom de la diferencia se ve
-  la rejilla de píxeles del monitor que el filtro quitó.}{fig:caso-real-pantalla}
 
 En la foto del diario (Figura~\ref{fig:caso-real-diario}) la trama aparece en el espectro como una
 grilla de puntos aislados: la frecuencia fundamental y sus armónicos. Con \texttt{umbral} $=0{,}1$
 se detectan 4 pares de manchas, y el notch borra solo el 0{,}39\,\% del espectro: los puntos de
-impresión desaparecen y la cara queda en gris continuo. La diferencia es solo la trama, con
-correlación $0{,}000$ con el contenido. En la foto de la pantalla (Figura~\ref{fig:caso-real-pantalla}) pasa algo parecido: el notch
-borra el 0{,}04\,\% del espectro y la diferencia es una rejilla de rayas cada 2 píxeles, también
-sin correlación con el contenido (Tabla~\ref{tab:caso-real}). En las dos fotos la energía en las
-zonas del notch baja unos 25~dB.
+impresión desaparecen y la cara queda en gris continuo, y la diferencia es casi solo la trama. En
+la foto de la pantalla pasa algo parecido: el notch borra el
+0{,}04\,\% del espectro y la diferencia es una rejilla de rayas cada 2 píxeles
+(Tabla~\ref{tab:caso-real}). En las dos fotos la energía en las zonas del notch baja unos 25~dB.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \small
   \begin{tabular}{lcccccc}
     \toprule
-    Foto & umbral & $r_{\text{DC}}$ & $\sigma$ & espectro borrado & reducción en picos &
-      corr.\ diferencia--contenido \\
+    Foto & umbral & $r_{\text{DC}}$ & $\sigma$ & bins detectados & espectro borrado & reducción en picos \\
     \midrule
-    Diario   & 0{,}1 & 20  & 4 & 0{,}39\,\% & 24{,}3~dB & $0{,}000$ \\
-    Pantalla & 0{,}3 & 100 & 2 & 0{,}04\,\% & 25{,}6~dB & $0{,}000$ \\
+    Diario   & 0{,}1 & 20  & 4 & 48  & 0{,}39\,\% & 24{,}3~dB \\
+    Pantalla & 0{,}3 & 100 & 2 & 226 & 0{,}04\,\% & 25{,}6~dB \\
     \bottomrule
   \end{tabular}
   \caption{Evaluación sin referencia del caso real (tabla \texttt{caso\_real.csv}).}
@@ -143,10 +131,6 @@ zonas del notch baja unos 25~dB.
 
 El método tiene límites que se notan en el caso real. En el diario, la trama no es un coseno
 sumado: el tamaño de cada punto depende de qué tan oscura es esa zona, así que el patrón está
-modulado por la imagen, y por eso en la diferencia se insinúa la silueta de la cara. También
-quedan armónicos más lejanos y débiles que dejan un grano fino; bajar el umbral los alcanza, pero
-borra más espectro. En la foto de la pantalla queda una textura tipo laberinto que viene del
+modulado por la imagen, y por eso en la diferencia se insinúa la silueta de la cara. En la foto de la pantalla queda una textura tipo laberinto que viene del
 procesamiento de la cámara del celular. Como no es periódica, no forma picos aislados y el notch
-no la puede quitar, ni debería. Por último, la imagen que se mostró en el monitor existe, pero no
-sirve como referencia: la foto cambia escala, perspectiva y color, y no se puede comparar píxel a
-píxel.
+no la puede quitar, ni debería.

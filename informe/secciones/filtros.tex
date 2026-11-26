@@ -30,10 +30,10 @@ atenuación como $-20\log_{10}\delta$, con $\delta$ el máximo de $|H|$ después
 sobre $f_c$ (fin del lóbulo principal), y el ancho como la distancia entre $|H|=1-\delta$ y
 $|H|=\delta$.
 
-\figura{filtros_n_coef.png}{0.9}{Pasabajos $f_c=100$\,Hz. $N$ cambia el ancho de la transición
+\figura{filtros_n_coef.png}{0.72}{Pasabajos $f_c=100$\,Hz. $N$ cambia el ancho de la transición
   y la ventana cambia la atenuación en rechazo.}{fig:filtros-ncoef}
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \small
   \begin{tabular}{lcccccc}
@@ -49,7 +49,7 @@ $|H|=\delta$.
     \bottomrule
   \end{tabular}
   \caption{Ancho de transición y atenuación del pasabajos
-    (\texttt{filtros\_transicion\_atenuacion.csv}). La atenuación varía menos de 2\,dB entre los
+    (\texttt{filtros\_transicion\_atenuacion.csv}). La atenuación varía a lo más unos 2\,dB entre los
     cuatro valores de $N$.}
   \label{tab:filtros}
 \end{table}
@@ -69,5 +69,5 @@ de frecuencia. A la salida del pasabajos (Figura~\ref{fig:filtros-chirp}) la amp
 hasta $t\approx0{,}2$\,s, se apaga durante la transición, de $\Delta f/500\approx0{,}065$\,s, y
 después es casi cero.
 
-\figura{filtros_chirp.png}{0.55}{Chirp de 0 a 500\,Hz filtrado con el pasabajos de 100\,Hz
+\figura{filtros_chirp.png}{0.48}{Chirp de 0 a 500\,Hz filtrado con el pasabajos de 100\,Hz
   (Hamming, $N=101$). En naranja, la banda de transición medida.}{fig:filtros-chirp}
